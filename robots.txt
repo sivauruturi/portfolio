@@ -1,0 +1,15 @@
+# Allow all web crawlers full access
+User-agent: *
+Allow: /
+
+# Block access to the following directories
+Disallow: /cgi-bin/
+Disallow: /wp-admin/
+Disallow: /wp-includes/
+Disallow: /scripts/
+
+# Allow specific files in the wp-admin directory
+Allow: /wp-admin/admin-ajax.php
+
+# Sitemap location
+Sitemap: https://www.sivauruturi.com/sitemap.xml
