@@ -77,9 +77,35 @@
 		<div id="cursor"></div>
 		<!-- end Cursor -->
 
+		<!-- Background video -->
+		<video class="body-overlay" muted autoplay loop playsinline preload="auto" aria-hidden="true">
+			<source src="assets/images/simple-strings.mp4" type="video/mp4">
+		</video>
+		<!-- end Background video -->
+
 		<!-- Background ripple canvas -->
 		<canvas id="liquid-ripple-canvas" aria-hidden="true"></canvas>
 		<!-- end Background ripple canvas -->
+
+		<audio id="background-audio" loop preload="auto">
+			<source src="assets/images/bg.mp3" type="audio/mpeg">
+		</audio>
+
+		<div id="audio-permission-prompt" class="audio-permission" aria-hidden="true">
+			<div class="audio-permission__panel">
+				<p class="audio-permission__eyebrow">Sound</p>
+				<h3>Enable background music?</h3>
+				<p>Turn on the ambient soundtrack when the website opens.</p>
+				<div class="audio-permission__actions">
+					<button id="audio-permission-allow" class="button button-sm" type="button">
+						<span data-text="Yes">Yes</span>
+					</button>
+					<button id="audio-permission-dismiss" class="button button-sm button-white" type="button">
+						<span data-text="No">No</span>
+					</button>
+				</div>
+			</div>
+		</div>
 
 		<!-- Header -->
 		<div class="header">
@@ -87,10 +113,13 @@
 				<div class="header-wrapper">
 					<!-- Header Logo -->
 					<div class="header-logo">
-						<a href="index.html"> <img src="assets/images/logo.png" alt="Siva Uruturi">
+						<a href="index.html"><img src="assets/images/logo.png" alt="Siva Uruturi"></a>
 					</div>
 					<!-- Header Nav -->
 					<div class="header-nav">
+						<button id="background-audio-toggle" class="jkd-sound-toggle me-2 me-lg-3" data-sound-toggle data-cursor="-hover" type="button" aria-label="Play Music" title="Play Music">
+							<canvas class="jkd-sound-canvas" width="121" height="101" aria-hidden="true"></canvas>
+						</button>
 						<a class="button button-sm button-dot me-2 me-lg-3" href="https://drive.google.com/file/d/1h3f0GoBVo8ag_i18pCyXQG8w3fOqqIdU/preview" target="_blank">
 							<i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> <span data-text="Resume">Resume</span>
 						</a>
@@ -151,15 +180,18 @@
 						<!-- Hero Avatar -->
 						<div class="hero-avatar">
 							<img src="assets/images/hero-avatar.jpg" alt="Siva Uruturi">
+							<div class="hero-avatar-badge" aria-label="Open to Work">
+								<span class="hero-avatar-badge__dot" aria-hidden="true"></span>
+								<span>Open to Work</span>
+							</div>
 						</div>
 						<!-- end Hero Avatar -->
 					</div>
 					<div class="col-12 col-lg-4 order-lg-1">
 						<div class="row g-4 g-lg-5">
 							<div class="col-12 col-md-4 col-lg-12">
-								<h6 class="sm-heading">Biography</h6>
-								<p>I' m Siva Uruturi. Product-focused UI/UX Designer building intuitive, high-performing digital journeys.
-								</p>
+								<h6 class="sm-heading">About Me</h6>
+								<p>I' m Siva Uruturi, UI/UX Designer creating user-centered, scalable digital experiences through research, interaction design, and design systems.</p>
 							</div>
 							<div class="col-6 col-md-4 col-lg-12">
 								<h6 class="sm-heading">Skills</h6>
@@ -208,15 +240,15 @@
 						<div class="row g-4 g-lg-5">
 							<div class="col-4 col-lg-12">
 								<h6 class="sm-heading">Projects Done</h6>
-								<h1 class="fw-light display-4 mb-0 line-height-110">30+</h1>
+								<h1 class="fw-light display-4 mb-0 line-height-110 js-count-up" data-count-to="10" data-count-suffix="+">0+</h1>
 							</div>
 							<div class="col-4 col-lg-12">
 								<h6 class="sm-heading">Brands Identities Created</h6>
-								<h1 class="fw-light display-4 mb-0 line-height-110">20+</h1>
+								<h1 class="fw-light display-4 mb-0 line-height-110 js-count-up" data-count-to="15" data-count-suffix="+">0+</h1>
 							</div>
 							<div class="col-4 col-lg-12">
 								<h6 class="sm-heading">Collaborations & Clients</h6>
-								<h1 class="fw-light display-4 mb-0 line-height-110">40+</h1>
+								<h1 class="fw-light display-4 mb-0 line-height-110 js-count-up" data-count-to="40" data-count-suffix="+">0+</h1>
 							</div>
 						</div><!-- end row(inner) -->
 					</div>
@@ -616,6 +648,7 @@
 
 							<!-- end swiper-wrapper -->
 						</div><!-- end portfolio-slider -->
+						<div class="swiper-portfolio-pagination"></div>
 					</div><!-- end container -->
 				</div>
 			</div>
@@ -713,14 +746,14 @@
 							<div class="swiper-slide">
 								<div class="testimonial-box">
 									<div class="testimonial-avatar">
-										<img src="assets/images/testimonial-avatar.jpg" alt="murali gottimukkala">
+										<img src="assets/images/testimonial-murali.jpg" alt="murali gottimukkala">
 									</div>
 									<div class="testimonial-content">
 										<div class="mb-3">
 											<h3>Murali</h3>
 											<span class="sm-heading text-white">CO-Founder at aasaan</span>
 										</div>
-										<p class="fs-4 fw-normal fst-italic line-height-140">Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore</p>
+										<p class="fs-4 fw-normal fst-italic line-height-140">He has a strong eye for detail and a deep understanding of how users interact with digital products. Throughout the project, Siva worked closely with our team, listened to feedback, and consistently delivered thoughtful design solutions.</p>
 									</div>
 								</div>
 							</div>
@@ -825,9 +858,46 @@
 												</li>
 											</ul>
 											<h2 class="mb-0">
-												<a class="blog-caption" href="#">
+												<a class="blog-caption" href="blog-2.html">
 													<i class="bi bi-arrow-right"></i>
 													The Importance of Responsive Design
+												</a>
+											</h2>
+										</div>
+									</div>
+								</div>
+								<!-- Slide Item 3 -->
+								<div class="swiper-slide">
+									<div class="blog-post-box">
+										<div class="blog-post-img">
+											<!-- Image -->
+											<a class="blog-post-img-link" href="blog-3.html">
+												<img src="assets/images/blog-img.jpg" alt="Best websites for UI/UX design inspiration">
+											</a>
+											<!-- Category -->
+											<div class="blog-post-category">
+												<a href="#">
+													<span data-text="Category">Category</span>
+												</a>
+											</div>
+										</div>
+										<div class="mt-4">
+											<ul class="list-inline-dot sm-heading text-white mb-2">
+												<li>
+													<a class="link-hover" href="#">
+														<span data-text="by Admin">by Admin</span>
+													</a>
+												</li>
+												<li>
+													<a class="link-hover" href="#">
+														<span data-text="Mar 15/2026">Mar 15/2026</span>
+													</a>
+												</li>
+											</ul>
+											<h2 class="mb-0">
+												<a class="blog-caption" href="blog-3.html">
+													<i class="bi bi-arrow-right"></i>
+													Best Websites for UI/UX Design Inspiration
 												</a>
 											</h2>
 										</div>

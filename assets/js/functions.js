@@ -1,21 +1,4 @@
-/*================================================
-*
-* Template name : Mone
-* Version       : 1.0.1
-* Author        : FlaTheme
-* Author URL    : http://themeforest.net/user/flatheme
-*
-* Table of Contents :
-* 1. Page Preloader
-* 2. Cursor
-* 3. Header Nav Menu
-* 4. Scroll To Top
-* 5. Sliders
-* 6. Lightbox
-* 7. Google Maps
-* 8. Contact Form
-*
-================================================*/
+
 "use strict";
 
 var $body = $("body");
@@ -105,10 +88,252 @@ if (scrollTopBtn) {
   });
 }
 
+/*===============================================
+  5. Background Audio
+===============================================*/
+var backgroundAudio = document.getElementById("background-audio");
+var backgroundAudioToggle = document.getElementById("background-audio-toggle");
+var audioPermissionPrompt = document.getElementById("audio-permission-prompt");
+var audioPermissionAllow = document.getElementById("audio-permission-allow");
+var audioPermissionDismiss = document.getElementById("audio-permission-dismiss");
+
+if (backgroundAudio && backgroundAudioToggle) {
+  var backgroundAudioCanvas = backgroundAudioToggle.querySelector(".jkd-sound-canvas");
+  var backgroundAudioCanvasContext = backgroundAudioCanvas ? backgroundAudioCanvas.getContext("2d") : null;
+  var audioConsentKey = "portfolio-audio-consent";
+  var soundToggleAnimationFrame = null;
+  backgroundAudio.volume = 0.45;
+  backgroundAudio.load();
+
+  var getStoredAudioConsent = function() {
+    try {
+      return window.localStorage.getItem(audioConsentKey);
+    } catch (error) {
+      return null;
+    }
+  };
+
+  var setStoredAudioConsent = function(value) {
+    try {
+      window.localStorage.setItem(audioConsentKey, value);
+    } catch (error) {
+      // Ignore storage errors so audio controls still work.
+    }
+  };
+
+  var setBackgroundAudioState = function(label, iconClass) {
+    backgroundAudioToggle.setAttribute("aria-label", label);
+    backgroundAudioToggle.setAttribute("title", label);
+  };
+
+  var drawSoundToggle = function(isPlaying, timestamp) {
+    if (!backgroundAudioCanvasContext || !backgroundAudioCanvas) {
+      return;
+    }
+
+    var canvasWidth = backgroundAudioCanvas.width;
+    var canvasHeight = backgroundAudioCanvas.height;
+    var barWidth = 10;
+    var barGap = 8;
+    var totalWidth = (barWidth * 5) + (barGap * 4);
+    var startX = (canvasWidth - totalWidth) * 0.5;
+    var baseY = canvasHeight * 0.5;
+    var pausedPattern = [18, 30, 42, 30, 18];
+
+    backgroundAudioCanvasContext.clearRect(0, 0, canvasWidth, canvasHeight);
+    backgroundAudioCanvasContext.fillStyle = isPlaying ? "rgba(198, 227, 255, 0.95)" : "rgba(255, 255, 255, 0.65)";
+
+    for (var i = 0; i < 5; i++) {
+      var barHeight = pausedPattern[i];
+
+      if (isPlaying) {
+        barHeight = 18 + Math.abs(Math.sin((timestamp * 0.008) + (i * 0.9))) * 34;
+      }
+
+      var x = startX + (i * (barWidth + barGap));
+      var y = baseY - (barHeight * 0.5);
+      var radius = barWidth * 0.5;
+
+      backgroundAudioCanvasContext.beginPath();
+      backgroundAudioCanvasContext.moveTo(x + radius, y);
+      backgroundAudioCanvasContext.lineTo(x + barWidth - radius, y);
+      backgroundAudioCanvasContext.quadraticCurveTo(x + barWidth, y, x + barWidth, y + radius);
+      backgroundAudioCanvasContext.lineTo(x + barWidth, y + barHeight - radius);
+      backgroundAudioCanvasContext.quadraticCurveTo(x + barWidth, y + barHeight, x + barWidth - radius, y + barHeight);
+      backgroundAudioCanvasContext.lineTo(x + radius, y + barHeight);
+      backgroundAudioCanvasContext.quadraticCurveTo(x, y + barHeight, x, y + barHeight - radius);
+      backgroundAudioCanvasContext.lineTo(x, y + radius);
+      backgroundAudioCanvasContext.quadraticCurveTo(x, y, x + radius, y);
+      backgroundAudioCanvasContext.closePath();
+      backgroundAudioCanvasContext.fill();
+    }
+  };
+
+  var animateSoundToggle = function(timestamp) {
+    drawSoundToggle(!backgroundAudio.paused, timestamp);
+
+    if (!backgroundAudio.paused) {
+      soundToggleAnimationFrame = window.requestAnimationFrame(animateSoundToggle);
+    } else {
+      soundToggleAnimationFrame = null;
+    }
+  };
+
+  var refreshSoundToggle = function() {
+    if (soundToggleAnimationFrame) {
+      window.cancelAnimationFrame(soundToggleAnimationFrame);
+      soundToggleAnimationFrame = null;
+    }
+
+    if (backgroundAudio.paused) {
+      drawSoundToggle(false, 0);
+    } else {
+      soundToggleAnimationFrame = window.requestAnimationFrame(animateSoundToggle);
+    }
+  };
+
+  var hideAudioPermissionPrompt = function() {
+    if (!audioPermissionPrompt) {
+      return;
+    }
+
+    audioPermissionPrompt.classList.remove("is-visible");
+    audioPermissionPrompt.setAttribute("aria-hidden", "true");
+  };
+
+  var showAudioPermissionPrompt = function() {
+    if (!audioPermissionPrompt) {
+      return;
+    }
+
+    audioPermissionPrompt.classList.add("is-visible");
+    audioPermissionPrompt.setAttribute("aria-hidden", "false");
+  };
+
+  var playBackgroundAudio = function() {
+    backgroundAudio.muted = false;
+    return backgroundAudio.play().then(function() {
+      syncBackgroundAudioState();
+      hideAudioPermissionPrompt();
+    }).catch(function() {
+      setBackgroundAudioState("Play Music", "bi bi-play-fill");
+      showAudioPermissionPrompt();
+    });
+  };
+
+  var syncBackgroundAudioState = function() {
+    if (backgroundAudio.paused) {
+      setBackgroundAudioState("Play Music", "bi bi-play-fill");
+    } else {
+      setBackgroundAudioState("Pause Music", "bi bi-pause-fill");
+    }
+
+    refreshSoundToggle();
+  };
+
+  backgroundAudioToggle.addEventListener("click", function() {
+    if (backgroundAudio.paused) {
+      setStoredAudioConsent("granted");
+      playBackgroundAudio();
+      return;
+    }
+
+    backgroundAudio.pause();
+    syncBackgroundAudioState();
+  });
+
+  if (audioPermissionAllow) {
+    audioPermissionAllow.addEventListener("click", function() {
+      setStoredAudioConsent("granted");
+      playBackgroundAudio();
+    });
+  }
+
+  if (audioPermissionDismiss) {
+    audioPermissionDismiss.addEventListener("click", function() {
+      setStoredAudioConsent("denied");
+      backgroundAudio.pause();
+      hideAudioPermissionPrompt();
+      syncBackgroundAudioState();
+    });
+  }
+
+  backgroundAudio.addEventListener("play", syncBackgroundAudioState);
+  backgroundAudio.addEventListener("pause", syncBackgroundAudioState);
+
+  if (getStoredAudioConsent() === "granted") {
+    playBackgroundAudio();
+  } else if (getStoredAudioConsent() !== "denied") {
+    showAudioPermissionPrompt();
+  }
+
+  syncBackgroundAudioState();
+}
+
 
 /*===============================================
-  5. Sliders
+  6. Sliders
 ===============================================*/
+var statCounters = document.querySelectorAll(".js-count-up");
+
+if (statCounters.length) {
+  var animateCountUp = function(counter) {
+    if (counter.dataset.countAnimated === "true") {
+      return;
+    }
+
+    var target = parseInt(counter.dataset.countTo || "0", 10);
+    var suffix = counter.dataset.countSuffix || "";
+    var duration = 1400;
+    var startTime = null;
+
+    counter.dataset.countAnimated = "true";
+
+    var updateCounter = function(timestamp) {
+      if (startTime === null) {
+        startTime = timestamp;
+      }
+
+      var progress = Math.min((timestamp - startTime) / duration, 1);
+      var easedProgress = 1 - Math.pow(1 - progress, 3);
+      var currentValue = Math.round(target * easedProgress);
+
+      counter.textContent = currentValue + suffix;
+
+      if (progress < 1) {
+        window.requestAnimationFrame(updateCounter);
+      } else {
+        counter.textContent = target + suffix;
+      }
+    };
+
+    window.requestAnimationFrame(updateCounter);
+  };
+
+  if ("IntersectionObserver" in window) {
+    var counterObserver = new IntersectionObserver(function(entries, observer) {
+      entries.forEach(function(entry) {
+        if (!entry.isIntersecting) {
+          return;
+        }
+
+        animateCountUp(entry.target);
+        observer.unobserve(entry.target);
+      });
+    }, {
+      threshold: 0.45
+    });
+
+    statCounters.forEach(function(counter) {
+      counterObserver.observe(counter);
+    });
+  } else {
+    statCounters.forEach(function(counter) {
+      animateCountUp(counter);
+    });
+  }
+}
+
 function initContinuousScroller() {
   var scrollers = document.querySelectorAll(".scroller[data-animated='true']");
 
@@ -142,9 +367,9 @@ var swiper = new Swiper(".portfolio-slider", {
   slidesPerView: 1,
   spaceBetween: 30,
   loop: true,
-  speed: 800,
+  speed: 500,
   autoplay: {
-    delay: 3500,
+    delay: 1500,
     disableOnInteraction: false,
     pauseOnMouseEnter: true,
   },
@@ -170,6 +395,10 @@ var swiper = new Swiper(".portfolio-slider", {
     nextEl: ".swiper-portfolio-next",
     prevEl: ".swiper-portfolio-prev",
   },
+  pagination: {
+    el: ".swiper-portfolio-pagination",
+    clickable: true,
+  },
 });
 
 //
@@ -178,6 +407,13 @@ var swiper = new Swiper(".portfolio-slider", {
 var swiper = new Swiper(".blog-slider", {
   slidesPerView: 1,
   spaceBetween: 24,
+  loop: true,
+  speed: 700,
+  autoplay: {
+    delay: 2200,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  },
   breakpoints: {
     640: {
       slidesPerView: 1,
@@ -204,6 +440,13 @@ var swiper = new Swiper(".blog-slider", {
 var swiper = new Swiper(".clients-slider", {
   slidesPerView: 2,
   spaceBetween: 24,
+  loop: true,
+  speed: 800,
+  autoplay: {
+    delay: 1800,
+    disableOnInteraction: false,
+    pauseOnMouseEnter: true,
+  },
   breakpoints: {
     640: {
       slidesPerView: 3,
@@ -378,6 +621,7 @@ $("#contactform").on("submit", function(e) {
 ===============================================*/
 (function() {
   var rippleCanvas = document.getElementById("liquid-ripple-canvas");
+  var backgroundVideo = document.querySelector(".body-overlay");
 
   if (!rippleCanvas) {
     return;
@@ -487,6 +731,19 @@ $("#contactform").on("submit", function(e) {
     spawnRippleFromPoint(clientX, clientY, performance.now());
   }
 
+  function handlePointerDown(clientX, clientY) {
+    if (prefersReducedMotion.matches) {
+      return;
+    }
+
+    pointerState.lastX = clientX;
+    pointerState.lastY = clientY;
+    pointerState.x = clientX;
+    pointerState.y = clientY;
+    lastSpawnTime = performance.now();
+    addRipple(clientX, clientY, 6);
+  }
+
   function drawBackdrop() {
     var centerGradient = rippleContext.createRadialGradient(
       pointerState.x,
@@ -501,7 +758,14 @@ $("#contactform").on("submit", function(e) {
     centerGradient.addColorStop(1, "rgba(0, 0, 0, 0)");
 
     rippleContext.globalCompositeOperation = "source-over";
-    rippleContext.fillStyle = "#000000";
+    rippleContext.clearRect(0, 0, canvasMetrics.width, canvasMetrics.height);
+
+    if (backgroundVideo) {
+      rippleContext.fillStyle = "rgba(0, 0, 0, 0.12)";
+    } else {
+      rippleContext.fillStyle = "#000000";
+    }
+
     rippleContext.fillRect(0, 0, canvasMetrics.width, canvasMetrics.height);
 
     rippleContext.globalCompositeOperation = "screen";
@@ -564,29 +828,34 @@ $("#contactform").on("submit", function(e) {
   drawBackdrop();
 
   window.addEventListener("resize", resizeRippleCanvas);
-  window.addEventListener("mousemove", function(event) {
-    handlePointerMove(event.clientX, event.clientY);
-  }, { passive: true });
-  window.addEventListener("touchstart", function(event) {
-    if (!event.touches.length) {
-      return;
-    }
+  if (window.PointerEvent) {
+    window.addEventListener("pointerdown", function(event) {
+      handlePointerDown(event.clientX, event.clientY);
+    }, { passive: true });
+    window.addEventListener("pointermove", function(event) {
+      handlePointerMove(event.clientX, event.clientY);
+    }, { passive: true });
+  } else {
+    window.addEventListener("mousemove", function(event) {
+      handlePointerMove(event.clientX, event.clientY);
+    }, { passive: true });
+    window.addEventListener("touchstart", function(event) {
+      if (!event.touches.length) {
+        return;
+      }
 
-    var touch = event.touches[0];
-    pointerState.lastX = touch.clientX;
-    pointerState.lastY = touch.clientY;
-    pointerState.x = touch.clientX;
-    pointerState.y = touch.clientY;
-    addRipple(touch.clientX, touch.clientY, 6);
-  }, { passive: true });
-  window.addEventListener("touchmove", function(event) {
-    if (!event.touches.length) {
-      return;
-    }
+      var touch = event.touches[0];
+      handlePointerDown(touch.clientX, touch.clientY);
+    }, { passive: true });
+    window.addEventListener("touchmove", function(event) {
+      if (!event.touches.length) {
+        return;
+      }
 
-    var touch = event.touches[0];
-    handlePointerMove(touch.clientX, touch.clientY);
-  }, { passive: true });
+      var touch = event.touches[0];
+      handlePointerMove(touch.clientX, touch.clientY);
+    }, { passive: true });
+  }
 
   if (prefersReducedMotion.addEventListener) {
     prefersReducedMotion.addEventListener("change", function() {
