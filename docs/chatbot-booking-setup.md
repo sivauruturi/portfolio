@@ -49,6 +49,7 @@ Copy `.env.example` to `.env` and update at least:
 - `GOOGLE_REDIRECT_URI`
 - `GOOGLE_REFRESH_TOKEN`
 - `FRONTEND_ORIGIN`
+- `OLLAMA_MODEL`
 
 Optional email settings:
 
@@ -63,16 +64,21 @@ Optional email settings:
 
 1. Run `npm install`
 2. Copy `.env.example` to `.env`
-3. Fill in the Google and admin values
-4. Start the booking API with `npm run dev`
-5. Serve the portfolio frontend the way you normally do
-6. Make sure `data-booking-api-base` in `index.html` points to your backend, such as `http://localhost:3001/api`
+3. Fill in the Google, Ollama, and admin values
+4. Make sure Ollama is already running locally and that the configured model is pulled
+5. Start the full local site and API together with `npm run dev`
+6. Open `http://localhost:3001` in the browser
+7. The assistant will use same-origin API routes:
+   - `/api/health`
+   - `/api/resume-data`
+   - `/api/recruiter-chat`
+   - `/api/booking/*`
 
 ## 7. Exact integration points
 
 ### `index.html`
 
-- Updated the existing `#portfolio-assistant-root` element to include `data-booking-api-base`
+- Updated the existing `#portfolio-assistant-root` element to include same-origin API attributes for booking, resume, and recruiter chat
 - Added scheduling quick-reply buttons
 - Updated the chatbot input placeholder to mention scheduling
 

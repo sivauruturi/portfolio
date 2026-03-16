@@ -268,5 +268,6 @@ async function fetchResumeData(forceRefresh) {
 }
 
 module.exports = {
-  fetchResumeData
+  fetchResumeData,
+  getResumeUrl
 };

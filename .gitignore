@@ -6,8 +6,10 @@ __pycache__/
 *.pyc
 .pytest_cache/
 .cache/
+node_modules/
 
 *.tmp
 *.swp
 *.swo
 *~
+.env

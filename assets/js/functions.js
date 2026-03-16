@@ -759,7 +759,7 @@ $("#contactform").on("submit", function(e) {
 
   var globalAssistantConfig = window.portfolioAssistantConfig || {};
   var portfolioAssistantConfig = {
-    apiEndpoint: globalAssistantConfig.apiEndpoint || "",
+    apiEndpoint: globalAssistantConfig.apiEndpoint || assistantRoot.getAttribute("data-chat-api-url") || "",
     bookingApiBaseUrl: assistantRoot.getAttribute("data-booking-api-base") || globalAssistantConfig.bookingApiBaseUrl || "",
     resumeDataUrl: globalAssistantConfig.resumeDataUrl || assistantRoot.getAttribute("data-resume-api-url") || "",
     resumeRefreshMs: Number(globalAssistantConfig.resumeRefreshMs || 300000),
@@ -1127,6 +1127,12 @@ $("#contactform").on("submit", function(e) {
     assistantRoot.classList.add("is-open");
     toggleButton.setAttribute("aria-expanded", "true");
     panel.setAttribute("aria-hidden", "false");
+    loadLatestResumeData(true).catch(function(error) {
+      console.error(error);
+    });
+    fetchRemoteResponse("").catch(function(error) {
+      console.error(error);
+    });
     window.setTimeout(function() {
       input.focus();
     }, 120);
@@ -1389,8 +1395,7 @@ $("#contactform").on("submit", function(e) {
       method: "POST",
       headers: portfolioAssistantConfig.requestHeaders,
       body: JSON.stringify({
-        message: userMessage,
-        portfolioData: portfolioAssistantData
+        message: userMessage
       })
     });
 
