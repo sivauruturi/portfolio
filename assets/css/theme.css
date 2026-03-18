@@ -26,15 +26,17 @@ body {
   z-index: 0;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  overflow: hidden;
   pointer-events: none;
-  opacity: 0.28;
+  opacity: 1;
+  background:
+    radial-gradient(circle at 50% 18%, rgba(82, 39, 255, 0.12), rgba(0, 0, 0, 0) 46%),
+    radial-gradient(circle at 78% 24%, rgba(255, 159, 252, 0.08), rgba(0, 0, 0, 0) 28%);
 }
 
-#liquid-ripple-canvas {
-  position: fixed;
+#liquid-ether-overlay canvas {
+  position: absolute;
   inset: 0;
-  z-index: 1;
   width: 100%;
   height: 100%;
   display: block;
@@ -180,7 +182,9 @@ body.portfolio-assistant-enabled .audio-permission {
   }
 
   body.portfolio-assistant-enabled .audio-permission {
-    bottom: 84px;
+    bottom: 40%;
+    left: 50%;
+    transform: translateX(-50%);
   }
 
   .audio-permission__panel {
@@ -220,6 +224,49 @@ img {
 
 .hero-heading {
   font-size: 4rem;
+}
+
+.shiny-text {
+  display: inline-block;
+  background-image: linear-gradient(
+    120deg,
+    rgba(181, 181, 181, 0.22) 0%,
+    rgba(181, 181, 181, 0.22) 35%,
+    rgba(255, 255, 255, 0.98) 50%,
+    rgba(181, 181, 181, 0.22) 65%,
+    rgba(181, 181, 181, 0.22) 100%
+  );
+  background-size: 200% auto;
+  background-position: 150% center;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: hero-shine 4s linear infinite;
+}
+
+.shiny-text:hover {
+  animation-play-state: paused;
+}
+
+@keyframes hero-shine {
+  0% {
+    background-position: 150% center;
+  }
+
+  55% {
+    background-position: -50% center;
+  }
+
+  100% {
+    background-position: -50% center;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shiny-text {
+    animation: none;
+    background-position: center;
+  }
 }
 
 @media (min-width: 768px) {
@@ -1997,130 +2044,94 @@ button.mfp-close:hover {
   company logos
 -------------------------------------------------*/
 .company-design-area {
-  padding: 40px 0px;
+  padding: 44px 0 24px;
 }
 
-.scroller {
-  --scroller-gap: 5rem;
+.company-design-header {
+  margin-bottom: 26px;
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-* {
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-.scroller[data-speed="slow"] {
-  --_animation-duration: 20s;
-}
-
-
-.scroller[data-direction="left"] {
-  --_animation-direction: forwards;
-}
-
-.scroller[data-animated="true"] {
+.logo-loop {
+  --logo-loop-gap: clamp(18px, 3vw, 34px);
+  --logo-loop-height: clamp(30px, 3vw, 38px);
+  position: relative;
   overflow: hidden;
-  -webkit-mask: -webkit-linear-gradient(left, transparent, white 20%, white 80%, transparent);
-  mask: linear-gradient(90deg, transparent, white 20%, white 80%, transparent);
+  padding: 14px 0;
+  -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+  mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
 }
 
-* {
-  margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
-  box-shadow: none;
-}
-
-.scroller[data-animated="true"] .scroller__inner {
-  width: -webkit-max-content;
-  width: -moz-max-content;
-  width: max-content;
-  -ms-flex-wrap: nowrap;
-  flex-wrap: nowrap;
-  -webkit-animation: scroll var(--_animation-duration, 120s) var(--_animation-direction, forwards) linear infinite;
-  animation: scroll var(--_animation-duration, 120s) var(--_animation-direction, forwards) linear infinite;
+.logo-loop__track {
+  display: flex;
+  align-items: center;
+  gap: var(--logo-loop-gap);
   will-change: transform;
 }
 
-.scroller__inner {
-  padding-block: 16px;
-  padding-block: 1rem;
-  display: -webkit-box;
-  display: -ms-flexbox;
+.logo-loop__list {
   display: flex;
-  -ms-flex-wrap: wrap;
-  flex-wrap: nowrap;
-  gap: var(--scroller-gap);
-  width: max-content;
-}
-
-.company-list .scroller__inner img {
-  -webkit-transform: scale(1);
-  transform: scale(1);
-  -webkit-transition: -webkit-transform 0.3s ease;
-  transition: transform 0.3s ease;
-  cursor: pointer;
-}
-
-.company-list .scroller__inner img:hover {
-  -webkit-transform: scale(1.12);
-  transform: scale(1.12);
-}
-
-* {
+  align-items: center;
+  flex: 0 0 auto;
+  gap: var(--logo-loop-gap);
+  list-style: none;
   margin: 0;
-  padding: 0;
-  border: none;
-  outline: none;
+  padding: 8px 0;
+}
+
+.logo-loop__item {
+  flex: 0 0 auto;
+}
+
+.logo-loop__logo {
+  min-width: clamp(146px, 16vw, 196px);
+  min-height: calc(var(--logo-loop-height) + 30px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 18px 24px;
+  border-radius: 999px;
+  background: transparent;
   box-shadow: none;
+  transition: transform 0.3s ease;
 }
 
-.company-design-area h2 {
-  text-transform: uppercase;
-  font-size: 16px;
-  text-align: center;
-  color: #fff;
-  margin-bottom: 30px;
-  letter-spacing: 5px;
-  font-weight: 500;
+.logo-loop__logo img {
+  width: auto;
+  height: var(--logo-loop-height);
+  max-width: 100%;
+  object-fit: contain;
+  filter: none;
+  opacity: 1;
+  transition: transform 0.3s ease;
 }
 
-.scroller[data-speed="slow"] {
-  --_animation-duration: 30s;
-}
-.scroller[data-direction="left"] {
-  --_animation-direction: forwards;
+.logo-loop__item:hover .logo-loop__logo {
+  transform: translateY(-4px);
 }
 
-@keyframes scroll {
-  0% {
-    transform: translateX(0%);
+.logo-loop__item:hover .logo-loop__logo img {
+  transform: scale(1.06);
+}
+
+@media (max-width: 767px) {
+  .company-design-area {
+    padding: 32px 0 12px;
   }
-  100% {
-    transform: translateX(calc(-50% - (var(--scroller-gap) / 2)));
+
+  .company-design-header {
+    margin-bottom: 20px;
+  }
+
+  .logo-loop {
+    --logo-loop-gap: 16px;
+  }
+
+  .logo-loop__logo {
+    min-width: 134px;
+    min-height: calc(var(--logo-loop-height) + 18px);
+    padding: 16px 20px;
   }
 }
-
 
 /*------------------------------------------------
   14. Portfolio
@@ -2845,8 +2856,8 @@ body.portfolio-assistant-enabled .scrolltotop {
 
 @media (max-width: 767.98px) {
   .audio-toggle-dock {
-    left: 350px;
-    bottom: 85px;
+    left: 10px;
+    bottom: 20px;
   }
 
   body.portfolio-assistant-enabled .scrolltotop {

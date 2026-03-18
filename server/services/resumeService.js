@@ -2,6 +2,16 @@ const pdfParse = require("pdf-parse");
 
 const DEFAULT_RESUME_URL =
   "https://drive.google.com/file/d/1h3f0GoBVo8ag_i18pCyXQG8w3fOqqIdU/preview";
+const SECTION_HEADINGS = [
+  "SUMMARY",
+  "EXPERIENCE",
+  "SKILLS",
+  "EDUCATION",
+  "CERTIFICATIONS",
+  "PROJECTS"
+];
+const MONTH_PATTERN =
+  "(Jan\\.?|Feb\\.?|Mar\\.?|Apr\\.?|May|Jun\\.?|Jul\\.?|Aug\\.?|Sep\\.?|Oct\\.?|Nov\\.?|Dec\\.?)";
 
 let cachedResume = null;
 let cachedAt = 0;
@@ -16,18 +26,27 @@ function getResumeCacheTtlMs() {
 
 function normalizeResumeText(text) {
   return String(text || "")
+    .replace(/\r/g, "\n")
     .replace(/\uFB01/g, "fi")
     .replace(/\uFB02/g, "fl")
-    .replace(/[•●]/g, "• ")
-    .replace(/[–—]/g, " - ")
     .replace(/\u00A0/g, " ")
+    .replace(/[•●]/g, "\n• ")
+    .replace(/[–—]/g, " - ")
+    .replace(/Phone-Alt|Envelope|GLOBE|LINKEDIN|LinkedIn|Map-marker-alt/g, " ")
+    .replace(/\|/g, " | ")
+    .replace(/([A-Za-z\)])(Jan\.?|Feb\.?|Mar\.?|Apr\.?|May|Jun\.?|Jul\.?|Aug\.?|Sep\.?|Oct\.?|Nov\.?|Dec\.?)/g, "$1 $2")
+    .replace(/([a-z])([A-Z])/g, "$1 $2")
+    .replace(/([A-Za-z])(\d)/g, "$1 $2")
+    .replace(/(\d%)([A-Za-z])/g, "$1 $2")
+    .replace(/•\s*\n\s*/g, "• ")
     .replace(/[ \t]+/g, " ")
+    .replace(/\n[ \t]+/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
     .trim();
 }
 
 function extractGoogleDriveFileId(url) {
-  const directMatch = url.match(/\/d\/([a-zA-Z0-9_-]+)/);
+  const directMatch = String(url || "").match(/\/d\/([a-zA-Z0-9_-]+)/);
 
   if (directMatch) {
     return directMatch[1];
@@ -52,7 +71,12 @@ function toDownloadUrl(url) {
 }
 
 async function downloadResumeBuffer() {
-  const response = await fetch(toDownloadUrl(getResumeUrl()));
+  const response = await fetch(toDownloadUrl(getResumeUrl()), {
+    headers: {
+      "User-Agent": "portfolio-resume-service/1.0",
+      "Cache-Control": "no-cache"
+    }
+  });
 
   if (!response.ok) {
     throw new Error(`Resume download failed with status ${response.status}.`);
@@ -62,47 +86,100 @@ async function downloadResumeBuffer() {
   return Buffer.from(arrayBuffer);
 }
 
-function splitSection(text, sectionName, nextSectionNames) {
-  const nextPattern = nextSectionNames.join("|");
-  const matcher = new RegExp(
-    `${sectionName}\\s*([\\s\\S]*?)(?:${nextPattern}|$)`,
-    "i"
-  );
-  const match = text.match(matcher);
-  return match ? match[1].trim() : "";
-}
-
 function splitLines(text) {
-  return text
+  return String(text || "")
     .split("\n")
     .map((line) => line.trim())
     .filter(Boolean);
 }
 
+function cleanInlineText(value) {
+  return String(value || "")
+    .replace(/\s+/g, " ")
+    .replace(/\s+([,.;:])/g, "$1")
+    .trim();
+}
+
+function uniqueList(values) {
+  return values.filter((value, index, array) => {
+    return value && array.indexOf(value) === index;
+  });
+}
+
+function extractSection(text, sectionName) {
+  const nextHeadings = SECTION_HEADINGS.filter((heading) => heading !== sectionName);
+  const pattern = new RegExp(
+    `\\b${sectionName}\\b\\s*([\\s\\S]*?)(?=\\n(?:${nextHeadings.join("|")})\\b|$)`,
+    "i"
+  );
+  const match = String(text || "").match(pattern);
+  return match ? match[1].trim() : "";
+}
+
 function extractEmail(text) {
-  const match = text.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+  const match = String(text || "")
+    .replace(/\s+/g, " ")
+    .match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i);
+
   return match ? match[0] : "";
 }
 
 function extractPhoneNumbers(text) {
-  const matches = text.match(/(?:\+?\d[\d(). -]{7,}\d)/g) || [];
-  return matches.map((value) => value.replace(/\s+/g, " ").trim());
+  const matches =
+    String(text || "")
+      .replace(/\s+/g, " ")
+      .match(/(?:\+?\d[\d(). -]{7,}\d)/g) || [];
+
+  return uniqueList(
+    matches.map((value) => {
+      return cleanInlineText(value).replace(/^0+/, "");
+    })
+  );
 }
 
-function parseHeader(lines, rawText) {
+function extractTrailingLocation(text) {
+  const normalizedText = cleanInlineText(text);
+  const remoteMatch = normalizedText.match(/(Remote\s*\([^)]+\))$/i);
+
+  if (remoteMatch) {
+    return cleanInlineText(remoteMatch[1]);
+  }
+
+  const cityStateMatch = normalizedText.match(
+    /([A-Za-z.'-]+(?:\s+[A-Za-z.'-]+){0,1},\s*[A-Z]{2,})$/i
+  );
+
+  if (cityStateMatch) {
+    return cleanInlineText(cityStateMatch[1]);
+  }
+
+  const internationalMatch = normalizedText.match(
+    /(Hyderabad,\s*INDIA)$/i
+  );
+
+  return internationalMatch ? cleanInlineText(internationalMatch[1]) : "";
+}
+
+function extractHeaderBlock(text) {
+  const summaryIndex = String(text || "").search(/\nSUMMARY\b/i);
+  return summaryIndex === -1 ? String(text || "") : String(text || "").slice(0, summaryIndex);
+}
+
+function parseHeader(text) {
+  const headerBlock = extractHeaderBlock(text);
+  const lines = splitLines(headerBlock);
   const name = lines[0] || "Siva Uruturi";
-  const role = lines[1] || "UI/UX Designer";
-  const email = extractEmail(rawText);
-  const phones = extractPhoneNumbers(rawText);
-  const locationLine = lines.find((line) => /Valparaiso|Boston|India|IN|MA/i.test(line)) || "";
-  const locationMatch = locationLine.match(/Valparaiso,\s*IN|Boston,\s*MA|Hyderabad,\s*INDIA/i);
+  const role = lines[1] || "";
+  const email = extractEmail(headerBlock);
+  const phones = extractPhoneNumbers(headerBlock);
+  const location = extractTrailingLocation(headerBlock);
 
   return {
     profile: {
       name,
       role,
       summary: "",
-      location: locationMatch ? locationMatch[0] : "Valparaiso, IN"
+      location
     },
     contact: {
       email,
@@ -112,82 +189,143 @@ function parseHeader(lines, rawText) {
   };
 }
 
-function parseSkills(skillsText) {
-  const toolsMatch = skillsText.match(/Tools\s*:\s*([\s\S]*?)Design Skills\s*:/i);
-  const designMatch = skillsText.match(/Design Skills\s*:\s*([\s\S]*?)Technical Skills\s*:/i);
-  const technicalMatch = skillsText.match(/Technical Skills\s*:\s*([\s\S]*)/i);
+function parseSummary(summaryText) {
+  return cleanInlineText(String(summaryText || "").replace(/\n/g, " "));
+}
 
-  const toList = (value) =>
-    String(value || "")
+function splitCommaSeparatedList(value) {
+  return uniqueList(
+    cleanInlineText(String(value || "").replace(/\n/g, " "))
       .split(",")
-      .map((item) => item.trim())
-      .filter(Boolean);
+      .map((item) => cleanInlineText(item))
+      .filter(Boolean)
+  );
+}
+
+function extractLabeledSection(text, label, nextLabels) {
+  const lookahead = nextLabels.length
+    ? `(?=(?:${nextLabels.join("|")})\\s*:|$)`
+    : "$";
+  const pattern = new RegExp(`${label}\\s*:\\s*([\\s\\S]*?)${lookahead}`, "i");
+  const match = String(text || "").match(pattern);
+  return match ? cleanInlineText(match[1]) : "";
+}
+
+function parseSkills(skillsText) {
+  const normalizedSkillsText = String(skillsText || "")
+    .replace(/\n+/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  const design = splitCommaSeparatedList(
+    extractLabeledSection(normalizedSkillsText, "Design Skills", [
+      "Tools",
+      "Technical Skills"
+    ])
+  );
+  const tools = splitCommaSeparatedList(
+    extractLabeledSection(normalizedSkillsText, "Tools", [
+      "Design Skills",
+      "Technical Skills"
+    ])
+  );
+  const technical = splitCommaSeparatedList(
+    extractLabeledSection(normalizedSkillsText, "Technical Skills", [
+      "Design Skills",
+      "Tools"
+    ])
+  );
 
   return {
-    tools: toList(toolsMatch ? toolsMatch[1] : ""),
-    design: toList(designMatch ? designMatch[1] : ""),
-    technical: toList(technicalMatch ? technicalMatch[1] : "")
+    tools,
+    design,
+    technical
   };
 }
 
-function parseEducation(educationText) {
-  const lines = splitLines(educationText);
+function looksLikeExperienceHeader(line) {
+  const pattern = new RegExp(
+    `^.+?\\s+${MONTH_PATTERN}\\s+\\d{4}\\s*-\\s*(Present|${MONTH_PATTERN}\\s+\\d{4})$`,
+    "i"
+  );
+  return pattern.test(cleanInlineText(line));
+}
 
-  if (lines.length === 0) {
-    return null;
-  }
-
-  const schoolLine = lines[0] || "";
-  const degreeLine = lines[1] || "";
-  const certificationLine = lines.find((line) => /Foundations of User Experience/i.test(line)) || "";
-  const schoolMatch = schoolLine.match(/^(.*?)(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)/);
-  const periodMatch = schoolLine.match(/(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+\d{4}\s*-\s*(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+\d{4}/);
-  const locationMatch = degreeLine.match(/([A-Za-z ]+,\s*[A-Z]{2,})$/);
+function parseExperienceHeader(line) {
+  const normalizedLine = cleanInlineText(line);
+  const pattern = new RegExp(
+    `^(.*?)\\s+(${MONTH_PATTERN}\\s+\\d{4}\\s*-\\s*(Present|${MONTH_PATTERN}\\s+\\d{4}))$`,
+    "i"
+  );
+  const match = normalizedLine.match(pattern);
 
   return {
-    education: {
-      degree: degreeLine.replace(locationMatch ? locationMatch[0] : "", "").trim(),
-      school: schoolMatch ? schoolMatch[1].trim() : schoolLine,
-      period: periodMatch ? periodMatch[0] : "",
-      location: locationMatch ? locationMatch[0] : ""
-    },
-    certifications: certificationLine ? [certificationLine.replace(/^•\s*/, "").trim()] : []
+    company: match ? cleanInlineText(match[1]) : normalizedLine,
+    period: match ? cleanInlineText(match[2]) : ""
+  };
+}
+
+function parseRoleAndLocation(line) {
+  const normalizedLine = cleanInlineText(line);
+  const location = extractTrailingLocation(normalizedLine);
+
+  return {
+    role: cleanInlineText(
+      normalizedLine.replace(location, "")
+    ),
+    location
   };
 }
 
 function parseExperience(experienceText) {
-  const lines = splitLines(experienceText);
+  const lines = splitLines(
+    String(experienceText || "").replace(/•\s*\n\s*/g, "• ")
+  );
   const experiences = [];
   let current = null;
 
   lines.forEach((line) => {
-    if (/^[A-Za-z].*(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+\d{4}\s*-\s*(Present|(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+\d{4})/i.test(line)) {
+    const normalizedLine = cleanInlineText(line);
+
+    if (looksLikeExperienceHeader(normalizedLine)) {
       if (current) {
         experiences.push(current);
       }
 
-      const companyMatch = line.match(/^(.*?)(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)/);
-      const periodMatch = line.match(/(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+\d{4}\s*-\s*(Present|(Jan\.|Feb\.|Mar\.|Apr\.|May|Jun\.|Jul\.|Aug\.|Sep\.|Oct\.|Nov\.|Dec\.)\s+\d{4})/i);
-
+      const parsedHeader = parseExperienceHeader(normalizedLine);
       current = {
-        company: companyMatch ? companyMatch[1].trim() : line.trim(),
+        company: parsedHeader.company,
         role: "",
-        period: periodMatch ? periodMatch[0] : "",
+        period: parsedHeader.period,
         location: "",
         highlights: []
       };
       return;
     }
 
-    if (current && !current.role && !line.startsWith("•")) {
-      const locationMatch = line.match(/([A-Za-z ]+,\s*[A-Z]{2,}|Hyderabad,\s*INDIA)$/i);
-      current.location = locationMatch ? locationMatch[0].trim() : "";
-      current.role = line.replace(locationMatch ? locationMatch[0] : "", "").trim();
+    if (!current) {
       return;
     }
 
-    if (current && line.startsWith("•")) {
-      current.highlights.push(line.replace(/^•\s*/, "").trim());
+    if (normalizedLine.startsWith("•")) {
+      const bulletText = cleanInlineText(normalizedLine.replace(/^•\s*/, ""));
+      if (bulletText) {
+        current.highlights.push(bulletText);
+      }
+      return;
+    }
+
+    if (!current.role) {
+      const roleAndLocation = parseRoleAndLocation(normalizedLine);
+      current.role = roleAndLocation.role;
+      current.location = roleAndLocation.location;
+      return;
+    }
+
+    if (current.highlights.length > 0) {
+      current.highlights[current.highlights.length - 1] = cleanInlineText(
+        current.highlights[current.highlights.length - 1] + " " + normalizedLine
+      );
     }
   });
 
@@ -198,55 +336,100 @@ function parseExperience(experienceText) {
   return experiences;
 }
 
+function parseEducation(educationText, preferredLocation) {
+  const lines = splitLines(String(educationText || "").replace(/•\s*\n\s*/g, "• "));
+
+  if (!lines.length) {
+    return {
+      education: null,
+      certifications: []
+    };
+  }
+
+  const schoolLine = cleanInlineText(lines[0] || "");
+  const degreeLine = cleanInlineText(lines[1] || "");
+  const periodMatch = schoolLine.match(
+    new RegExp(`${MONTH_PATTERN}\\s+\\d{4}\\s*-\\s*${MONTH_PATTERN}\\s+\\d{4}`, "i")
+  );
+  const school = cleanInlineText(
+    schoolLine.replace(periodMatch ? periodMatch[0] : "", "")
+  );
+  const location =
+    preferredLocation && degreeLine.indexOf(preferredLocation) !== -1
+      ? preferredLocation
+      : extractTrailingLocation(degreeLine);
+  const degree = cleanInlineText(
+    degreeLine.replace(location, "")
+  );
+  const certifications = lines
+    .slice(2)
+    .map((line) => cleanInlineText(line.replace(/^•\s*/, "")))
+    .filter(Boolean);
+
+  return {
+    education: {
+      degree,
+      school,
+      period: periodMatch ? cleanInlineText(periodMatch[0]) : "",
+      location
+    },
+    certifications: uniqueList(certifications)
+  };
+}
+
+function parseProjects(projectsText) {
+  return uniqueList(
+    splitLines(String(projectsText || "").replace(/^•\s*/gm, ""))
+      .map((line) => cleanInlineText(line))
+      .filter(Boolean)
+  );
+}
+
 function parseAchievements(experiences) {
-  const achievementMatches = [];
-  const pattern = /(\d+%[^.,;]*)/gi;
+  const achievements = [];
 
   experiences.forEach((item) => {
     item.highlights.forEach((highlight) => {
-      const matches = highlight.match(pattern) || [];
-      matches.forEach((value) => {
-        achievementMatches.push(highlight.includes(value) ? highlight : value);
-      });
+      if (/\d+%/.test(highlight)) {
+        achievements.push(cleanInlineText(highlight));
+      }
     });
   });
 
-  return [...new Set(achievementMatches)];
+  return uniqueList(achievements);
 }
 
 function buildResumePayload(parsedText) {
-  const lines = splitLines(parsedText);
-  const header = parseHeader(lines, parsedText);
-  const summary = splitSection(parsedText, "SUMMARY", ["EXPERIENCE"]);
-  const experienceText = splitSection(parsedText, "EXPERIENCE", ["SKILLS"]);
-  const skillsText = splitSection(parsedText, "SKILLS", ["EDUCATION"]);
-  const educationText = splitSection(parsedText, "EDUCATION", ["$"]);
-  const experiences = parseExperience(experienceText);
-  const parsedSkills = parseSkills(skillsText);
-  const parsedEducation = parseEducation(educationText) || {
-    education: null,
-    certifications: []
-  };
+  const header = parseHeader(parsedText);
+  const summary = parseSummary(extractSection(parsedText, "SUMMARY"));
+  const experience = parseExperience(extractSection(parsedText, "EXPERIENCE"));
+  const parsedSkills = parseSkills(extractSection(parsedText, "SKILLS"));
+  const parsedEducation = parseEducation(
+    extractSection(parsedText, "EDUCATION"),
+    header.profile.location
+  );
+  const projects = parseProjects(extractSection(parsedText, "PROJECTS"));
 
   return {
-    sourceUrl: getResumeUrl(),
     updatedAt: new Date().toISOString(),
+    sourceUrl: getResumeUrl(),
     rawText: parsedText,
     profile: {
       ...header.profile,
       summary
     },
     contact: header.contact,
-    experience: experiences,
-    skills: [
+    experience,
+    skills: uniqueList([
       ...parsedSkills.tools,
       ...parsedSkills.design,
       ...parsedSkills.technical
-    ],
+    ]),
     skillsByCategory: parsedSkills,
     education: parsedEducation.education,
     certifications: parsedEducation.certifications,
-    achievements: parseAchievements(experiences)
+    achievements: parseAchievements(experience),
+    projects
   };
 }
 
@@ -269,5 +452,6 @@ async function fetchResumeData(forceRefresh) {
 
 module.exports = {
   fetchResumeData,
-  getResumeUrl
+  getResumeUrl,
+  toDownloadUrl
 };

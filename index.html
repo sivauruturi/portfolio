@@ -77,15 +77,9 @@
 		<div id="cursor"></div>
 		<!-- end Cursor -->
 
-		<!-- Background video -->
-		<video class="body-overlay" muted autoplay loop playsinline preload="auto" aria-hidden="true">
-			<source src="assets/images/simple-strings.mp4" type="video/mp4">
-		</video>
-		<!-- end Background video -->
-
-		<!-- Background ripple canvas -->
-		<canvas id="liquid-ripple-canvas" aria-hidden="true"></canvas>
-		<!-- end Background ripple canvas -->
+		<!-- Background liquid overlay -->
+		<div id="liquid-ether-overlay" class="body-overlay" aria-hidden="true"></div>
+		<!-- end Background liquid overlay -->
 
 		<audio id="background-audio" loop preload="auto">
 			<source src="assets/images/bg.mp3" type="audio/mpeg">
@@ -94,8 +88,8 @@
 		<div id="audio-permission-prompt" class="audio-permission" aria-hidden="true">
 			<div class="audio-permission__panel">
 				<p class="audio-permission__eyebrow">Sound</p>
-				<h3>Enable background music?</h3>
-				<p>Turn on the ambient soundtrack when the website opens.</p>
+				<h3>Enhance Your Experience</h3>
+				<p>Enable background music to enjoy a more immersive journey through the website.</p>
 				<div class="audio-permission__actions">
 					<button id="audio-permission-allow" class="button button-sm" type="button">
 						<span data-text="Yes">Yes</span>
@@ -163,7 +157,7 @@
 				<div class="container text-center">
 					<div class="row">
 						<div class="col-12">
-							<h1 class="hero-heading display-1 fw-bold mb-0 stroke-text">Siva Uruturi</h1>
+							<h1 class="hero-heading display-1 fw-bold mb-0 stroke-text shiny-text">Siva Uruturi</h1>
 						</div>
 					</div><!-- end row -->
 				</div><!-- end container -->
@@ -316,33 +310,84 @@
 			</div>
 			<!-- end Services section -->
 		<!-- START COMPANY DESIGN AREA -->
-			<div class="company-design-area">
+			<section class="company-design-area" aria-labelledby="company-design-title">
 				<div class="container">
-					<div class="row">
-						<div class="col-lg-12">
-							<h2>Company I Worked With</h2>
-							<div class="company-list">
-								<div class="scroller" data-direction="left" data-speed="slow" style="translate: none; rotate: none; scale: none;" data-lag="0" data-animated="true">
-									<div class="scroller__inner">
-										<img src="assets/images/aasaan-logo.png" alt="aasaan.app">
-									<img src="assets/images/izeal-logo.png" alt="izealinc" aria-hidden="true">
-									<img src="assets/images/99monkeys-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/cloudorama-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/aspire-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/healthlinc-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/cravingcatch-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/hashnet-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/iway-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/pinkblue-logo.png" alt="" aria-hidden="true">
-									<img src="assets/images/vertu-logo.png" alt="" aria-hidden="true">
-								</div>
-								</div>
-							</div>
+					<div class="company-design-header text-center">
+						<h1 id="company-design-title" class="display-6 fw-medium mb-0">
+							Companies <span class="text-gradient">I Worked With</span>
+						</h1>
+					</div>
+					<div
+						class="logo-loop js-logo-loop"
+						role="region"
+						aria-label="Companies Siva has worked with"
+						data-logo-speed="100"
+						data-logo-hover-speed="0"
+						style="--logo-loop-height: 100px; --logo-loop-gap: 70px;"
+					>
+						<div class="logo-loop__track">
+							<ul class="logo-loop__list" role="list">
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/aasaan-logo.png" alt="Aasaan" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/izeal-logo.png" alt="Izeal" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/99monkeys-logo.png" alt="99Monkeys" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/cloudorama-logo.png" alt="Cloudorama" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/aspire-logo.png" alt="Aspire" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/healthlinc-logo.png" alt="HealthLinc" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/cravingcatch-logo.png" alt="Craving Catch" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/hashnet-logo.png" alt="Hashnet" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/iway-logo.png" alt="iWay Infotech" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/pinkblue-logo.png" alt="Pink Blue" loading="lazy" decoding="async">
+									</div>
+								</li>
+								<li class="logo-loop__item">
+									<div class="logo-loop__logo">
+										<img src="assets/images/vertu-logo.png" alt="Vertu" loading="lazy" decoding="async">
+									</div>
+								</li>
+							</ul>
 						</div>
 					</div>
 				</div>
-			</div>
-<!-- // END COMPANY DESIGN AREA -->
+			</section>
+		<!-- // END COMPANY DESIGN AREA -->
 
 <!-- START CALL TO ACTION DESIGN AREA -->
 
@@ -1057,9 +1102,7 @@
 				id="portfolio-assistant-root"
 				class="portfolio-assistant"
 				aria-live="polite"
-				data-booking-api-base="/api"
 				data-resume-api-url="/api/resume-data"
-				data-chat-api-url="/api/recruiter-chat"
 			>
 			<button
 				id="portfolio-assistant-toggle"
@@ -1122,6 +1165,7 @@
 
 		<!-- JavaScripts -->
 		<script src="https://maps.googleapis.com/maps/api/js?key=YOUR_API_KEY"></script>
+		<script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
 		<script src="assets/plugins/jquery.min.js"></script>
 		<script src="assets/plugins/plugins.js"></script>
 		<script src="assets/js/functions.js"></script>
