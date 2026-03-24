@@ -325,11 +325,11 @@
       </div>
 
       <div class="actions">
-        <a class="button-card primary" href="assets/contact/siva-uruturi.vcf">
+        <a class="button-card primary" href="assets/contact/siva-uruturi.vcf" data-vcard-action="open">
           <i class="bi bi-phone"></i>
           Add To Contacts
         </a>
-        <a class="button-card secondary" href="assets/contact/siva-uruturi.vcf" download="Siva-Uruturi.vcf">
+        <a class="button-card secondary" href="assets/contact/siva-uruturi.vcf" download="Siva-Uruturi.vcf" data-vcard-action="download">
           <i class="bi bi-download"></i>
           Download vCard
         </a>
@@ -400,8 +400,9 @@
 
           <p class="help">
             <strong>Works on iPhone and Android</strong>
-            Tap <em>Add To Contacts</em> to open the `.vcf` contact card. iPhone usually shows the
-            contact preview directly, and Android typically downloads or opens it in your contacts app.
+            Tap <em>Add To Contacts</em> to open the contact card directly. Use <em>Download vCard</em>
+            to save the `.vcf` file. On iPhone, if the browser shows the contact preview instead of
+            downloading, use the share sheet to save or add it from there.
           </p>
 
           <a class="footer-link" href="index.html">
@@ -412,5 +413,61 @@
       </div>
     </section>
   </main>
+  <script>
+    (function () {
+      var vcardUrl = "assets/contact/siva-uruturi.vcf";
+      var actionLinks = document.querySelectorAll("[data-vcard-action]");
+      var userAgent = navigator.userAgent || "";
+      var isIOS = /iPad|iPhone|iPod/.test(userAgent) || (userAgent.includes("Mac") && navigator.maxTouchPoints > 1);
+
+      function openVcard() {
+        window.location.href = vcardUrl;
+      }
+
+      async function downloadVcard() {
+        try {
+          var response = await fetch(vcardUrl, { cache: "no-store" });
+          if (!response.ok) {
+            throw new Error("Unable to fetch vCard");
+          }
+
+          var text = await response.text();
+          var blob = new Blob([text], { type: "text/vcard;charset=utf-8" });
+          var objectUrl = URL.createObjectURL(blob);
+          var link = document.createElement("a");
+
+          link.href = objectUrl;
+          link.download = "Siva-Uruturi.vcf";
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          window.setTimeout(function () {
+            URL.revokeObjectURL(objectUrl);
+          }, 1000);
+        } catch (error) {
+          openVcard();
+        }
+      }
+
+      actionLinks.forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          event.preventDefault();
+
+          if (link.dataset.vcardAction === "open") {
+            openVcard();
+            return;
+          }
+
+          if (isIOS) {
+            openVcard();
+            return;
+          }
+
+          downloadVcard();
+        });
+      });
+    }());
+  </script>
 </body>
 </html>
