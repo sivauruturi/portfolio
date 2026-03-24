@@ -830,7 +830,118 @@ $("#contactform").on("submit", function(e) {
 });
 
 /*===============================================
-  9. Liquid Ether Background
+  9. Resume Access Form
+===============================================*/
+(function() {
+  var resumeForm = document.getElementById("resumeAccessForm");
+  var successMessage = document.getElementById("resume-access-success");
+  var errorMessage = document.getElementById("resume-access-error");
+  var resumeModalElement = document.getElementById("resumeAccessModal");
+
+  if (!resumeForm) {
+    return;
+  }
+
+  var submitButton = resumeForm.querySelector('button[type="submit"]');
+  var submitLabel = submitButton ? submitButton.querySelector("span") : null;
+  var defaultLabel = submitLabel ? submitLabel.getAttribute("data-text") || submitLabel.textContent.trim() : "";
+
+  resumeForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    var resumeTab = window.open("about:blank", "_blank");
+
+    if (resumeTab) {
+      resumeTab.opener = null;
+      resumeTab.document.title = "Opening resume...";
+      resumeTab.document.body.style.margin = "0";
+      resumeTab.document.body.style.minHeight = "100vh";
+      resumeTab.document.body.style.display = "grid";
+      resumeTab.document.body.style.placeItems = "center";
+      resumeTab.document.body.style.background = "#0f1115";
+      resumeTab.document.body.style.color = "#ffffff";
+      resumeTab.document.body.style.fontFamily = '"Outfit", "Open Sans", sans-serif';
+      resumeTab.document.body.innerHTML = "<div style=\"padding:24px;text-align:center;\"><p style=\"margin:0;font-size:18px;letter-spacing:0.02em;\">Preparing resume...</p></div>";
+    }
+
+    if (successMessage) {
+      successMessage.classList.remove("show-result");
+    }
+
+    if (errorMessage) {
+      errorMessage.classList.remove("show-result");
+    }
+
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    if (submitLabel) {
+      submitLabel.textContent = "Submitting...";
+      submitLabel.setAttribute("data-text", "Submitting...");
+    }
+
+    fetch(resumeForm.action, {
+      method: "POST",
+      body: new FormData(resumeForm),
+      headers: {
+        Accept: "application/json"
+      }
+    })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(result) {
+        if (!result.success) {
+          throw new Error(result.message || "Submission failed.");
+        }
+
+        if (successMessage) {
+          successMessage.classList.add("show-result");
+        }
+
+        resumeForm.reset();
+
+        if (resumeModalElement && window.bootstrap && window.bootstrap.Modal) {
+          var resumeModalInstance = window.bootstrap.Modal.getInstance(resumeModalElement);
+
+          if (resumeModalInstance) {
+            resumeModalInstance.hide();
+          }
+        }
+
+        window.setTimeout(function() {
+          if (resumeTab) {
+            resumeTab.location.replace(resumeForm.dataset.resumeUrl);
+          } else {
+            window.open(resumeForm.dataset.resumeUrl, "_blank", "noopener");
+          }
+        }, 300);
+      })
+      .catch(function() {
+        if (resumeTab && !resumeTab.closed) {
+          resumeTab.close();
+        }
+
+        if (errorMessage) {
+          errorMessage.classList.add("show-result");
+        }
+      })
+      .finally(function() {
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
+
+        if (submitLabel) {
+          submitLabel.textContent = defaultLabel;
+          submitLabel.setAttribute("data-text", defaultLabel);
+        }
+      });
+  });
+})();
+
+/*===============================================
+  10. Liquid Ether Background
 ===============================================*/
 (function() {
   var mount = document.getElementById("liquid-ether-overlay");

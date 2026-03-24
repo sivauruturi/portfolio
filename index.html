@@ -114,9 +114,14 @@
 					</div>
 					<!-- Header Nav -->
 					<div class="header-nav">
-						<a class="button button-sm button-dot me-2 me-lg-3" href="https://drive.google.com/file/d/1h3f0GoBVo8ag_i18pCyXQG8w3fOqqIdU/preview" target="_blank">
+						<button
+							class="button button-sm button-dot me-2 me-lg-3"
+							type="button"
+							data-bs-toggle="modal"
+							data-bs-target="#resumeAccessModal"
+						>
 							<i class="fa-solid fa-cloud-arrow-down fa-bounce"></i> <span data-text="Resume">Resume</span>
-						</a>
+						</button>
 						<!-- Nav Menu Toggle -->
 						<button id="nav-toggle" class="button button-sm">
 							<span data-text="Menu">Menu</span>
@@ -1078,6 +1083,54 @@
 			<!-- end Contact section -->
 
 		</main>
+
+		<!-- Resume Access Modal -->
+		<div class="modal fade" id="resumeAccessModal" tabindex="-1" aria-labelledby="resumeAccessModalLabel" aria-hidden="true">
+			<div class="modal-dialog modal-dialog-centered modal-lg">
+				<div class="modal-content bg-dark text-white border-0 rounded-4">
+					<div class="modal-header border-secondary border-opacity-25 px-4 px-lg-5 pt-4 pt-lg-5 pb-3">
+						<div>
+							<span class="title-heading text-white-04">Resume Access</span>
+							<h2 id="resumeAccessModalLabel" class="mb-2">Request My <span class="text-gradient">Resume</span></h2>
+							<p class="mb-0 text-white-50">Share a few details and the resume preview will open automatically after a successful submission.</p>
+						</div>
+						<button type="button" class="btn-close btn-close-white ms-3" data-bs-dismiss="modal" aria-label="Close"></button>
+					</div>
+					<div class="modal-body px-4 px-lg-5 pb-4 pb-lg-5">
+						<div class="contact-form mb-0">
+								<form
+									id="resumeAccessForm"
+									class="resume-access-form"
+									action="https://api.web3forms.com/submit"
+									method="POST"
+									data-resume-url="https://drive.google.com/file/d/1h3f0GoBVo8ag_i18pCyXQG8w3fOqqIdU/preview"
+								>
+								<input type="hidden" name="access_key" value="b09ee724-043b-4bd4-a779-25c650a700a8">
+								<input type="hidden" name="subject" value="New resume access request from portfolio">
+								<input type="hidden" name="from_name" value="Siva Uruturi Portfolio">
+								<input type="checkbox" name="botcheck" class="d-none" tabindex="-1" autocomplete="off">
+								<div class="row gx-3 gy-0">
+									<div class="col-12 col-md-6">
+										<input type="text" name="name" placeholder="Full Name" required>
+									</div>
+									<div class="col-12 col-md-6">
+										<input type="email" name="email" placeholder="Your Email" required>
+									</div>
+								</div>
+								<button class="button button-dot" type="submit">
+									<span data-text="View Resume">View Resume</span>
+								</button>
+							</form>
+							<div class="submit-result">
+								<span id="resume-access-success">Success! Opening resume...</span>
+								<span id="resume-access-error">Something went wrong. Please try again.</span>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<!-- end Resume Access Modal -->
 
 		<!-- Footer -->
 		<div class="py-4 py-lg-5 text-center">
