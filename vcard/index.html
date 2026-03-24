@@ -419,28 +419,69 @@
   <script>
     (function () {
       var vcardUrl = "assets/contact/siva-uruturi.vcf";
+      var fileName = "Siva-Uruturi.vcf";
       var actionLinks = document.querySelectorAll("[data-vcard-action]");
       var userAgent = navigator.userAgent || "";
       var isIOS = /iPad|iPhone|iPod/.test(userAgent) || (userAgent.includes("Mac") && navigator.maxTouchPoints > 1);
+      var cachedVcardText = null;
 
-      function openVcard() {
-        window.location.href = vcardUrl;
+      async function getVcardText() {
+        if (cachedVcardText) {
+          return cachedVcardText;
+        }
+
+        var response = await fetch(vcardUrl, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Unable to fetch vCard");
+        }
+
+        cachedVcardText = await response.text();
+        return cachedVcardText;
       }
 
-      async function downloadVcard() {
+      async function createVcardFile() {
+        var text = await getVcardText();
+        return new File([text], fileName, { type: "text/vcard;charset=utf-8" });
+      }
+
+      async function openVcard() {
         try {
-          var response = await fetch(vcardUrl, { cache: "no-store" });
-          if (!response.ok) {
-            throw new Error("Unable to fetch vCard");
+          var file = await createVcardFile();
+          var objectUrl = URL.createObjectURL(file);
+
+          window.location.assign(objectUrl);
+
+          window.setTimeout(function () {
+            URL.revokeObjectURL(objectUrl);
+          }, 4000);
+        } catch (error) {
+          window.location.href = vcardUrl;
+        }
+      }
+
+      async function shareOrDownloadVcard() {
+        try {
+          var file = await createVcardFile();
+
+          if (
+            isIOS &&
+            navigator.share &&
+            navigator.canShare &&
+            navigator.canShare({ files: [file] })
+          ) {
+            await navigator.share({
+              title: "Siva Uruturi Contact",
+              text: "Save Siva Uruturi's contact card.",
+              files: [file]
+            });
+            return;
           }
 
-          var text = await response.text();
-          var blob = new Blob([text], { type: "text/vcard;charset=utf-8" });
-          var objectUrl = URL.createObjectURL(blob);
+          var objectUrl = URL.createObjectURL(file);
           var link = document.createElement("a");
 
           link.href = objectUrl;
-          link.download = "Siva-Uruturi.vcf";
+          link.download = fileName;
           document.body.appendChild(link);
           link.click();
           link.remove();
@@ -462,12 +503,7 @@
             return;
           }
 
-          if (isIOS) {
-            openVcard();
-            return;
-          }
-
-          downloadVcard();
+          shareOrDownloadVcard();
         });
       });
     }());
