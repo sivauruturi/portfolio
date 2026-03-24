@@ -13,15 +13,16 @@
   <link href="assets/plugins/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
   <style>
     :root {
-      --bg: #0a0f1f;
+      --bg: #000000;
       --bg-soft: rgba(255, 255, 255, 0.08);
-      --card: rgba(8, 15, 32, 0.78);
+      --card: rgba(12, 10, 12, 0.88);
       --line: rgba(255, 255, 255, 0.12);
-      --text: #f5f7fb;
-      --muted: #b7c1d9;
-      --accent: #7ce4c3;
-      --accent-strong: #46c7a2;
-      --shadow: 0 30px 70px rgba(0, 0, 0, 0.35);
+      --text: #f8f5f6;
+      --muted: #b8aeb2;
+      --accent: #ff4d4d;
+      --accent-strong: #d10000;
+      --accent-deep: #4d0000;
+      --shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
     }
 
     * {
@@ -34,8 +35,9 @@
       font-family: "Segoe UI", sans-serif;
       color: var(--text);
       background:
-        radial-gradient(circle at top, rgba(124, 228, 195, 0.2), transparent 30%),
-        linear-gradient(135deg, #050816 0%, #0b1530 45%, #101d3d 100%);
+        radial-gradient(circle at top, rgba(255, 77, 77, 0.2), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(209, 0, 0, 0.14), transparent 24%),
+        linear-gradient(135deg, #000000 0%, #120607 46%, #220708 100%);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -59,7 +61,7 @@
       position: relative;
       padding: 40px 28px 28px;
       background:
-        linear-gradient(145deg, rgba(124, 228, 195, 0.18), rgba(70, 199, 162, 0.04)),
+        linear-gradient(145deg, rgba(255, 77, 77, 0.22), rgba(209, 0, 0, 0.05)),
         linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
     }
 
@@ -70,7 +72,7 @@
       width: 240px;
       height: 240px;
       border-radius: 50%;
-      background: rgba(124, 228, 195, 0.08);
+      background: rgba(255, 77, 77, 0.12);
       filter: blur(20px);
     }
 
@@ -154,9 +156,9 @@
     }
 
     .button-card.primary {
-      background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-      color: #042218;
-      box-shadow: 0 16px 30px rgba(70, 199, 162, 0.22);
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong), var(--accent-deep));
+      color: #fff2f2;
+      box-shadow: 0 16px 36px rgba(209, 0, 0, 0.28);
     }
 
     .button-card.secondary {
@@ -250,9 +252,9 @@
       margin: 0;
       padding: 18px;
       border-radius: 18px;
-      background: rgba(124, 228, 195, 0.08);
-      border: 1px solid rgba(124, 228, 195, 0.18);
-      color: #e7fff6;
+      background: rgba(255, 77, 77, 0.08);
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      color: #ffe8e8;
       line-height: 1.7;
     }
 
