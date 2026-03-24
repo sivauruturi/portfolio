@@ -1,0 +1,17 @@
+BEGIN:VCARD
+VERSION:3.0
+N:Uruturi;Siva;;;
+FN:Siva Uruturi
+ORG:Siva Uruturi
+TITLE:UI/UX Designer
+EMAIL;TYPE=INTERNET,PREF:connect@sivauruturi.com
+TEL;TYPE=CELL,VOICE,PREF:+16056719582
+TEL;TYPE=CELL,VOICE:+919490507052
+ADR;TYPE=WORK:;;252 S Greenwich St;Valparaiso;IN;46383;USA
+URL:https://www.sivauruturi.com/
+URL;TYPE=LinkedIn:https://www.linkedin.com/in/siva-uruturi/
+URL;TYPE=GitHub:https://github.com/sivauruturi
+URL;TYPE=Behance:https://www.behance.net/shivauruturi
+URL;TYPE=Dribbble:https://dribbble.com/sivauruturi
+NOTE:UI/UX Designer specializing in product design, user experience, web design, and scalable design systems.
+END:VCARD
