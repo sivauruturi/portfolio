@@ -949,7 +949,107 @@ $("#contactform").on("submit", function(e) {
 })();
 
 /*===============================================
-  10. Liquid Ether Background
+  10. Portfolio Feedback Form
+===============================================*/
+(function() {
+  var feedbackForm = document.getElementById("portfolioFeedbackForm");
+  var successMessage = document.getElementById("portfolio-feedback-success");
+  var errorMessage = document.getElementById("portfolio-feedback-error");
+
+  if (!feedbackForm) {
+    return;
+  }
+
+  var submitButton = feedbackForm.querySelector('button[type="submit"]');
+  var submitLabel = submitButton ? submitButton.querySelector("span") : null;
+  var defaultLabel = submitLabel ? submitLabel.getAttribute("data-text") || submitLabel.textContent.trim() : "";
+  var subjectInput = feedbackForm.elements.namedItem("subject");
+  var projectField = feedbackForm.elements.namedItem("portfolio_highlight");
+
+  var getFieldValue = function(field) {
+    if (!field) {
+      return "";
+    }
+
+    if (typeof RadioNodeList !== "undefined" && field instanceof RadioNodeList) {
+      return String(field.value || "").trim();
+    }
+
+    return String(field.value || "").trim();
+  };
+
+  feedbackForm.addEventListener("submit", function(e) {
+    e.preventDefault();
+
+    if (successMessage) {
+      successMessage.classList.remove("show-result");
+    }
+
+    if (errorMessage) {
+      errorMessage.classList.remove("show-result");
+    }
+
+    if (submitButton) {
+      submitButton.disabled = true;
+    }
+
+    if (submitLabel) {
+      submitLabel.textContent = "Submitting...";
+      submitLabel.setAttribute("data-text", "Submitting...");
+    }
+
+    if (subjectInput) {
+      var selectedProject = getFieldValue(projectField);
+      subjectInput.value = selectedProject
+        ? "Portfolio feedback for " + selectedProject
+        : "New portfolio feedback submission";
+    }
+
+    fetch(feedbackForm.action, {
+      method: "POST",
+      body: new FormData(feedbackForm),
+      headers: {
+        Accept: "application/json"
+      }
+    })
+      .then(function(response) {
+        return response.json().catch(function() {
+          return {
+            success: response.ok
+          };
+        });
+      })
+      .then(function(result) {
+        if (!result.success) {
+          throw new Error(result.message || "Submission failed.");
+        }
+
+        if (successMessage) {
+          successMessage.classList.add("show-result");
+        }
+
+        feedbackForm.reset();
+      })
+      .catch(function() {
+        if (errorMessage) {
+          errorMessage.classList.add("show-result");
+        }
+      })
+      .finally(function() {
+        if (submitButton) {
+          submitButton.disabled = false;
+        }
+
+        if (submitLabel) {
+          submitLabel.textContent = defaultLabel;
+          submitLabel.setAttribute("data-text", defaultLabel);
+        }
+      });
+  });
+})();
+
+/*===============================================
+  11. Liquid Ether Background
 ===============================================*/
 (function() {
   var mount = document.getElementById("liquid-ether-overlay");

@@ -214,6 +214,62 @@
 				</div>
 			</div>
 
+			<div class="section">
+				<div class="container">
+					<div class="row g-4 g-xl-5 align-items-start">
+						<div class="col-12 col-xl-4">
+							<span class="title-heading text-white-04">Feedback</span>
+							<h2 class="display-5 fw-medium mb-3">Share feedback on <span class="text-gradient">Hashnet</span></h2>
+							<p class="mb-0">If this case study stood out to you, I’d love to hear what worked well and what could be even better.</p>
+						</div>
+						<div class="col-12 col-xl-8">
+							<div class="contact-form portfolio-feedback-card mb-0">
+								<form
+									id="portfolioFeedbackForm"
+									class="portfolio-feedback-form"
+									action="https://api.web3forms.com/submit"
+									method="POST"
+								>
+									<input type="hidden" name="access_key" value="873eb59d-7fdd-4459-9678-25e7d66ac717">
+									<input type="hidden" id="portfolioFeedbackSubject" name="subject" value="Portfolio feedback for Hashnet">
+									<input type="hidden" id="portfolioHighlight" name="portfolio_highlight" value="Hashnet">
+									<input type="hidden" name="from_name" value="Portfolio Feedback">
+									<input type="hidden" name="form_type" value="Portfolio Feedback">
+									<input type="checkbox" name="botcheck" class="d-none" tabindex="-1" autocomplete="off">
+									<div class="row gx-3 gy-0">
+										<div class="col-12 col-md-6">
+											<input type="text" name="name" placeholder="Your Name" required>
+										</div>
+										<div class="col-12 col-md-6">
+											<input type="email" name="email" placeholder="Your Email" required>
+										</div>
+									</div>
+									<div class="portfolio-feedback-field">
+										<span class="portfolio-feedback-label">Rate This Work</span>
+										<select id="portfolioRating" name="rating" required aria-label="Rate this work">
+											<option value="" selected disabled>Select a rating</option>
+											<option value="5 - Excellent">5 - Excellent</option>
+											<option value="4 - Very Good">4 - Very Good</option>
+											<option value="3 - Good">3 - Good</option>
+											<option value="2 - Fair">2 - Fair</option>
+											<option value="1 - Needs Improvement">1 - Needs Improvement</option>
+										</select>
+									</div>
+									<textarea name="message" placeholder="What stood out to you, and what could be even better?" required></textarea>
+									<button class="button button-dot" type="submit">
+										<span data-text="Send Feedback">Send Feedback</span>
+									</button>
+								</form>
+								<div class="submit-result">
+									<span id="portfolio-feedback-success">Thank you! Your feedback has been sent.</span>
+									<span id="portfolio-feedback-error">Something went wrong. Please try again.</span>
+								</div>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+
 		</main>
 
 		<!-- Footer -->
