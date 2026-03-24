@@ -837,6 +837,7 @@ $("#contactform").on("submit", function(e) {
   var successMessage = document.getElementById("resume-access-success");
   var errorMessage = document.getElementById("resume-access-error");
   var resumeModalElement = document.getElementById("resumeAccessModal");
+  var resumeSubjectInput = document.getElementById("resumeAccessSubject");
 
   if (!resumeForm) {
     return;
@@ -879,6 +880,13 @@ $("#contactform").on("submit", function(e) {
     if (submitLabel) {
       submitLabel.textContent = "Submitting...";
       submitLabel.setAttribute("data-text", "Submitting...");
+    }
+
+    if (resumeSubjectInput) {
+      var requesterName = (resumeForm.elements.name && resumeForm.elements.name.value ? resumeForm.elements.name.value : "").trim();
+      resumeSubjectInput.value = requesterName
+        ? "Resume access request from " + requesterName
+        : "New resume access request from portfolio";
     }
 
     fetch(resumeForm.action, {
