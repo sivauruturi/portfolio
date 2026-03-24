@@ -252,14 +252,18 @@
 									</div>
 									<div class="portfolio-feedback-field">
 										<span class="portfolio-feedback-label">Rate This Work</span>
-										<select id="portfolioRating" name="rating" required aria-label="Rate this work">
-											<option value="" selected disabled>Select a rating</option>
-											<option value="5 - Excellent">5 - Excellent</option>
-											<option value="4 - Very Good">4 - Very Good</option>
-											<option value="3 - Good">3 - Good</option>
-											<option value="2 - Fair">2 - Fair</option>
-											<option value="1 - Needs Improvement">1 - Needs Improvement</option>
-										</select>
+										<div class="rating" role="radiogroup" aria-label="Rate this work">
+											<input type="radio" name="rating" id="r1" value="5 - Excellent" required>
+											<label for="r1" aria-label="5 stars"></label>
+											<input type="radio" name="rating" id="r2" value="4 - Very Good">
+											<label for="r2" aria-label="4 stars"></label>
+											<input type="radio" name="rating" id="r3" value="3 - Good">
+											<label for="r3" aria-label="3 stars"></label>
+											<input type="radio" name="rating" id="r4" value="2 - Fair">
+											<label for="r4" aria-label="2 stars"></label>
+											<input type="radio" name="rating" id="r5" value="1 - Needs Improvement">
+											<label for="r5" aria-label="1 star"></label>
+										</div>
 									</div>
 									<textarea name="message" placeholder="What stood out to you, and what could be even better?" required></textarea>
 									<button class="button button-dot" type="submit">
