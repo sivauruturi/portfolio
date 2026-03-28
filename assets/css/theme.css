@@ -1424,13 +1424,13 @@ a:focus, a:active, button:focus, button:active {
   left:3px;
   }
 .button-dot.button-sm {
-  padding: 10px 34px 10px 20px;
+  padding: 10px 10px 10px 20px;
 }
 element.style {
   letter-spacing: 5px;
 }
 .button-dot.button-sm:before {
-  right: 20px;
+  right: 5px;
 }
 
 .button-dot.button-lg {
