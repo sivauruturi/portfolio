@@ -1424,13 +1424,13 @@ a:focus, a:active, button:focus, button:active {
   left:3px;
   }
 .button-dot.button-sm {
-  padding: 10px 10px 10px 20px;
+  padding: 10px 18px 10px 15px;
 }
 element.style {
   letter-spacing: 5px;
 }
 .button-dot.button-sm:before {
-  right: 5px;
+  right: 7px;
 }
 
 .button-dot.button-lg {
@@ -3238,6 +3238,7 @@ body.portfolio-assistant-enabled .scrolltotop {
 @media (max-width: 1199.98px) {
   .stroke-text {
     -webkit-text-stroke-width: 1.2px;
+    font-size: 59px;
   }
 }
 
