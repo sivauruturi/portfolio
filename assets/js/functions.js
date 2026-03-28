@@ -2076,7 +2076,6 @@ $("#contactform").on("submit", function(e) {
     email: "connect@sivauruturi.com",
     phonePrimary: "+1 (605) 671-9582"
   };
-  var localApiOrigin = "http://localhost:3001";
   var portfolioAssistantData = {
     sourceUrl: "",
     updatedAt: "",
@@ -2106,14 +2105,13 @@ $("#contactform").on("submit", function(e) {
 
     if (rawValue.charAt(0) === "/") {
       if (
-        window.location.protocol === "file:" ||
-        window.location.origin === "null" ||
-        window.location.origin.indexOf("localhost:3001") === -1
+        window.location.protocol === "http:" ||
+        window.location.protocol === "https:"
       ) {
-        return localApiOrigin + rawValue;
+        return window.location.origin + rawValue;
       }
 
-      return window.location.origin + rawValue;
+      return "";
     }
 
     return rawValue;
