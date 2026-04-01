@@ -1,29 +1,63 @@
 #!/usr/bin/env python3
 import json
-import os
 import re
-import subprocess
 import sys
 import urllib.request
 from datetime import datetime, timezone
 from io import BytesIO
-from urllib.parse import urlparse, parse_qs
+from urllib.parse import parse_qs, urlparse
 
-try:
-    from pypdf import PdfReader
-except ImportError:
-    try:
-        from PyPDF2 import PdfReader
-    except ImportError:
-        PdfReader = None
+import pdfplumber
 
 
 DEFAULT_RESUME_URL = (
     "https://drive.google.com/file/d/1h3f0GoBVo8ag_i18pCyXQG8w3fOqqIdU/preview"
 )
-DEFAULT_OLLAMA_BASE_URL = os.environ.get("OLLAMA_BASE_URL", "http://127.0.0.1:11434")
-DEFAULT_OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "llama3.2")
-DEFAULT_OLLAMA_NUM_CTX = int(os.environ.get("OLLAMA_NUM_CTX", "8192"))
+
+REGION_PRESETS = {
+    "contact": {
+        "page": 0,
+        "bbox": [0.00, 0.00, 1.00, 0.15],
+    },
+    "summary": {
+        "page": 0,
+        "bbox": [0.00, 0.13, 1.00, 0.28],
+    },
+    "experience": {
+        "page": 0,
+        "bbox": [0.00, 0.25, 1.00, 1.00],
+    },
+    "skills": {
+        "page": 1,
+        "bbox": [0.00, 0.32, 1.00, 0.50],
+    },
+    "education": {
+        "page": 1,
+        "bbox": [0.00, 0.50, 1.00, 1.00],
+    },
+}
+
+KEYWORD_REGION_MAP = {
+    "address": "contact",
+    "availability": "summary",
+    "background": "summary",
+    "bio": "summary",
+    "contact": "contact",
+    "contact details": "contact",
+    "education": "education",
+    "email": "contact",
+    "experience": "experience",
+    "linkedin": "contact",
+    "location": "contact",
+    "phone": "contact",
+    "phone number": "contact",
+    "profile": "summary",
+    "resume summary": "summary",
+    "skills": "skills",
+    "summary": "summary",
+    "tools": "skills",
+    "work history": "experience",
+}
 
 
 def extract_google_drive_file_id(url: str) -> str:
@@ -46,7 +80,7 @@ def to_download_url(url: str) -> str:
 
 
 def normalize_text(text: str) -> str:
-    return (
+    normalized = (
         str(text or "")
         .replace("\ufb01", "fi")
         .replace("\ufb02", "fl")
@@ -54,100 +88,134 @@ def normalize_text(text: str) -> str:
         .replace("•", "\n• ")
         .replace("●", "\n• ")
     )
+    normalized = re.sub(r"[ \t]+", " ", normalized)
+    normalized = re.sub(r"\n{3,}", "\n\n", normalized)
+    return normalized.strip()
 
 
-def download_resume_text(resume_url: str) -> str:
+def download_resume_bytes(resume_url: str) -> bytes:
     request = urllib.request.Request(
         to_download_url(resume_url),
         headers={"User-Agent": "portfolio-recruiter-chat/1.0"},
     )
     with urllib.request.urlopen(request, timeout=30) as response:
-        pdf_bytes = response.read()
+        return response.read()
 
-    if PdfReader is not None:
-        reader = PdfReader(BytesIO(pdf_bytes))
-        pages = [page.extract_text() or "" for page in reader.pages]
-        return normalize_text("\n".join(pages)).strip()
 
-    process = subprocess.run(
-        ["pdftotext", "-", "-"],
-        input=pdf_bytes,
-        stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
-        check=False,
+def normalize_keyword(value: str) -> str:
+    return re.sub(r"\s+", " ", str(value or "").lower()).strip()
+
+
+def extract_keywords_from_message(message: str):
+    normalized_message = normalize_keyword(re.sub(r"[^a-z0-9\s]", " ", message or ""))
+    matches = []
+
+    for keyword in KEYWORD_REGION_MAP:
+        if keyword in normalized_message:
+            matches.append(keyword)
+
+    return matches
+
+
+def choose_region(keywords, message: str) -> tuple[str, str]:
+    for keyword in keywords:
+        normalized = normalize_keyword(keyword)
+        region = KEYWORD_REGION_MAP.get(normalized)
+        if region:
+            return region, normalized
+
+    for keyword in extract_keywords_from_message(message):
+        region = KEYWORD_REGION_MAP.get(keyword)
+        if region:
+            return region, keyword
+
+    return "summary", "summary"
+
+
+def to_absolute_bbox(page, relative_bbox):
+    x0, top, x1, bottom = relative_bbox
+    return (
+        page.width * x0,
+        page.height * top,
+        page.width * x1,
+        page.height * bottom,
     )
 
-    if process.returncode != 0:
-        stderr = process.stderr.decode("utf-8", errors="ignore").strip()
-        raise RuntimeError(stderr or "Unable to extract text from the resume PDF.")
 
-    return normalize_text(process.stdout.decode("utf-8", errors="ignore")).strip()
+def clean_lines(text: str):
+    lines = [line.strip(" -|") for line in normalize_text(text).splitlines()]
+    lines = [line for line in lines if line]
+    deduped = []
 
+    for line in lines:
+        if not deduped or deduped[-1] != line:
+            deduped.append(line)
 
-def post_json(url: str, payload):
-    request = urllib.request.Request(
-        url,
-        data=json.dumps(payload).encode("utf-8"),
-        headers={
-            "Content-Type": "application/json",
-            "User-Agent": "portfolio-recruiter-chat/1.0",
-        },
-        method="POST",
-    )
-    with urllib.request.urlopen(request, timeout=120) as response:
-        return json.loads(response.read().decode("utf-8"))
+    return deduped
 
 
-def ask_ollama(question: str, resume_text: str, model: str, base_url: str, num_ctx: int):
-    system_prompt = (
-        "You are a recruiter assistant answering questions only from the provided resume. "
-        "Be concise, professional, and factual. "
-        "If the answer is not clearly in the resume, say that it is not available in the resume."
-    )
-    user_prompt = (
-        "Use this complete resume as the only source of truth.\n\n"
-        f"Resume:\n{resume_text}\n\n"
-        f"Recruiter question: {question or 'Give a short professional summary of the candidate.'}"
-    )
-    payload = {
-        "model": model,
-        "stream": False,
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt},
-        ],
-        "options": {
-            "num_ctx": num_ctx,
-        },
-    }
-    response = post_json(f"{base_url.rstrip('/')}/api/chat", payload)
-    message = ((response or {}).get("message") or {}).get("content", "").strip()
-    if not message:
-        raise RuntimeError("Ollama returned an empty response.")
-    return message
+def extract_region_text(pdf_bytes: bytes, region_name: str) -> str:
+    preset = REGION_PRESETS.get(region_name) or REGION_PRESETS["summary"]
+    with pdfplumber.open(BytesIO(pdf_bytes)) as pdf:
+        page_index = min(preset["page"], max(len(pdf.pages) - 1, 0))
+        page = pdf.pages[page_index]
+        absolute_bbox = to_absolute_bbox(page, preset["bbox"])
+
+        cropped = page.crop(absolute_bbox)
+        text = cropped.extract_text(x_tolerance=2, y_tolerance=3) or ""
+
+        if not text.strip():
+            text = page.extract_text(x_tolerance=2, y_tolerance=3) or ""
+
+    lines = clean_lines(text)
+    return "\n".join(lines)
+
+
+def build_reply(region_name: str, matched_keyword: str, extracted_text: str) -> str:
+    if not extracted_text:
+        return (
+            "I could not extract that section from the resume PDF right now. "
+            "Please try another keyword."
+        )
+
+    if region_name == "contact":
+        intro = f"Here are the {matched_keyword or 'contact'} details from the resume:"
+    elif region_name == "summary":
+        intro = "Here is the summary section from the resume:"
+    elif region_name == "experience":
+        intro = "Here is the experience section from the resume:"
+    elif region_name == "skills":
+        intro = "Here is the skills section from the resume:"
+    elif region_name == "education":
+        intro = "Here is the education section from the resume:"
+    else:
+        intro = "Here is the extracted resume content:"
+
+    return f"{intro}\n\n{extracted_text}"
 
 
 def main():
     payload = json.load(sys.stdin)
     resume_url = payload.get("resumeUrl") or DEFAULT_RESUME_URL
-    question = str(payload.get("message") or "")
-    model = str(payload.get("model") or DEFAULT_OLLAMA_MODEL)
-    base_url = str(payload.get("baseUrl") or DEFAULT_OLLAMA_BASE_URL)
-    num_ctx = int(payload.get("numCtx") or DEFAULT_OLLAMA_NUM_CTX)
-    resume_text = download_resume_text(resume_url)
-    reply = ask_ollama(question, resume_text, model, base_url, num_ctx)
-
+    message = str(payload.get("message") or "")
+    raw_keywords = payload.get("keywords") or []
+    keywords = [str(keyword) for keyword in raw_keywords if str(keyword).strip()]
+    region_name, matched_keyword = choose_region(keywords, message)
+    pdf_bytes = download_resume_bytes(resume_url)
+    extracted_text = extract_region_text(pdf_bytes, region_name)
+    reply = build_reply(region_name, matched_keyword, extracted_text)
     print(
         json.dumps(
             {
                 "ok": True,
                 "reply": reply,
-                "model": model,
-                "resumeChars": len(resume_text),
+                "region": region_name,
+                "matchedKeyword": matched_keyword,
                 "resumeUpdatedAt": datetime.now(timezone.utc).isoformat(),
             }
         )
     )
+
 
 
 if __name__ == "__main__":
