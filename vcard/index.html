@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Siva Uruturi | Contact Card</title>
+  <meta name="description" content="Save Siva Uruturi's contact details to your iPhone or Android device with a downloadable vCard.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.sivauruturi.com/vcard">
+  <base href="../">
+  <link href="assets/images/favicon.png" rel="shortcut icon">
+  <link href="assets/plugins/bootstrap/bootstrap.min.css" rel="stylesheet">
+  <link href="assets/plugins/bootstrap-icons/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #000000;
+      --bg-soft: rgba(255, 255, 255, 0.08);
+      --card: rgba(12, 10, 12, 0.88);
+      --line: rgba(255, 255, 255, 0.12);
+      --text: #f8f5f6;
+      --muted: #b8aeb2;
+      --accent: #ff4d4d;
+      --accent-strong: #d10000;
+      --accent-deep: #4d0000;
+      --shadow: 0 30px 90px rgba(0, 0, 0, 0.5);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Segoe UI", sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top, rgba(255, 77, 77, 0.2), transparent 30%),
+        radial-gradient(circle at 85% 20%, rgba(209, 0, 0, 0.14), transparent 24%),
+        linear-gradient(135deg, #000000 0%, #120607 46%, #220708 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+
+    .shell {
+      width: min(100%, 1024px);
+    }
+
+    .card-wrap {
+      background: var(--card);
+      border: 1px solid var(--line);
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+      backdrop-filter: blur(16px);
+    }
+
+    .hero {
+      position: relative;
+      padding: 40px 28px 28px;
+      background:
+        linear-gradient(145deg, rgba(255, 77, 77, 0.22), rgba(209, 0, 0, 0.05)),
+        linear-gradient(180deg, rgba(255, 255, 255, 0.05), transparent);
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      inset: auto -10% -45% auto;
+      width: 240px;
+      height: 240px;
+      border-radius: 50%;
+      background: rgba(255, 77, 77, 0.12);
+      filter: blur(20px);
+    }
+
+    .eyebrow {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.18em;
+      color: var(--accent);
+      margin-bottom: 18px;
+    }
+
+    .hero-grid {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      grid-template-columns: 124px 1fr;
+      gap: 24px;
+      align-items: center;
+    }
+
+    .avatar {
+      width: 124px;
+      height: 124px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.28);
+    }
+
+    .avatar img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 4vw, 3.5rem);
+      line-height: 0.95;
+    }
+
+    .title {
+      margin: 12px 0 14px;
+      color: var(--muted);
+      font-size: 1.04rem;
+    }
+
+    .summary {
+      max-width: 58ch;
+      margin: 0;
+      color: #d9e2f2;
+      line-height: 1.7;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+      padding: 24px 28px 0;
+    }
+
+    .button-card {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      min-height: 58px;
+      padding: 14px 18px;
+      border-radius: 18px;
+      text-decoration: none;
+      font-weight: 600;
+      transition: transform 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
+    }
+
+    .button-card:hover {
+      transform: translateY(-1px);
+    }
+
+    .button-card.primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-strong), var(--accent-deep));
+      color: #fff2f2;
+      box-shadow: 0 16px 36px rgba(209, 0, 0, 0.28);
+    }
+
+    .button-card.secondary {
+      background: var(--bg-soft);
+      color: var(--text);
+      border: 1px solid var(--line);
+    }
+
+    .content {
+      display: grid;
+      grid-template-columns: 1.35fr 0.95fr;
+      gap: 0;
+      border-top: 1px solid var(--line);
+      margin-top: 28px;
+    }
+
+    .panel {
+      padding: 28px;
+    }
+
+    .panel + .panel {
+      border-left: 1px solid var(--line);
+    }
+
+    .section-label {
+      margin: 0 0 16px;
+      color: var(--muted);
+      font-size: 0.88rem;
+      text-transform: uppercase;
+      letter-spacing: 0.16em;
+    }
+
+    .details {
+      display: grid;
+      gap: 14px;
+    }
+
+    .detail {
+      display: flex;
+      gap: 14px;
+      align-items: flex-start;
+      padding: 16px 18px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .detail i {
+      color: var(--accent);
+      font-size: 1.1rem;
+      margin-top: 3px;
+    }
+
+    .detail strong,
+    .detail a {
+      color: var(--text);
+    }
+
+    .detail span {
+      display: block;
+      color: var(--muted);
+      font-size: 0.92rem;
+      margin-bottom: 4px;
+    }
+
+    .detail a {
+      text-decoration: none;
+      word-break: break-word;
+    }
+
+    .socials {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .socials a {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 14px;
+      border-radius: 999px;
+      text-decoration: none;
+      color: var(--text);
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .help {
+      margin: 0;
+      padding: 18px;
+      border-radius: 18px;
+      background: rgba(255, 77, 77, 0.08);
+      border: 1px solid rgba(255, 77, 77, 0.2);
+      color: #ffe8e8;
+      line-height: 1.7;
+    }
+
+    .help strong {
+      display: block;
+      margin-bottom: 8px;
+      color: var(--accent);
+    }
+
+    .footer-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 18px;
+      color: var(--muted);
+      text-decoration: none;
+    }
+
+    @media (max-width: 767px) {
+      body {
+        padding: 16px;
+      }
+
+      .hero {
+        padding: 28px 20px 22px;
+      }
+
+      .hero-grid,
+      .content,
+      .actions {
+        grid-template-columns: 1fr;
+      }
+
+      .avatar {
+        width: 104px;
+        height: 104px;
+      }
+
+      .panel {
+        padding: 20px;
+      }
+
+      .panel + .panel {
+        border-left: 0;
+        border-top: 1px solid var(--line);
+      }
+    }
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <section class="card-wrap">
+      <div class="hero">
+        <div class="eyebrow">
+          <i class="bi bi-person-vcard"></i>
+          Mobile Contact Card
+        </div>
+        <div class="hero-grid">
+          <div class="avatar">
+            <img src="assets/images/hero-avatar.jpg" alt="Siva Uruturi portrait">
+          </div>
+          <div>
+            <h1>Siva Uruturi</h1>
+            <p class="title">UI/UX Designer</p>
+            <p class="summary">
+              Save my contact details directly to your phone and reach out for product design,
+              UX, branding, and web experience projects.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div class="actions">
+        <a class="button-card primary" href="assets/contact/siva-uruturi.vcf" data-vcard-action="open">
+          <i class="bi bi-phone"></i>
+          Add To Contacts
+        </a>
+        <a class="button-card secondary" href="assets/contact/siva-uruturi.vcf" download="Siva-Uruturi.vcf" data-vcard-action="download">
+          <i class="bi bi-download"></i>
+          Download vCard
+        </a>
+      </div>
+
+      <div class="content">
+        <div class="panel">
+          <p class="section-label">Contact Details</p>
+          <div class="details">
+            <div class="detail">
+              <i class="bi bi-envelope"></i>
+              <div>
+                <span>Email</span>
+                <a href="mailto:connect@sivauruturi.com">connect@sivauruturi.com</a>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="bi bi-telephone"></i>
+              <div>
+                <span>United States</span>
+                <a href="tel:+16056719582">+1 (605) 671 9582</a>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="bi bi-telephone-forward"></i>
+              <div>
+                <span>India</span>
+                <a href="tel:+919490507052">+91 94905 07052</a>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="bi bi-globe2"></i>
+              <div>
+                <span>Website</span>
+                <a href="https://www.sivauruturi.com/" target="_blank" rel="noopener noreferrer">www.sivauruturi.com</a>
+              </div>
+            </div>
+            <div class="detail">
+              <i class="bi bi-geo-alt"></i>
+              <div>
+                <span>Location</span>
+                <strong>252 S Greenwich St, Valparaiso, IN 46383, USA</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="panel">
+          <p class="section-label">Connect Online</p>
+          <div class="socials">
+            <a href="https://www.linkedin.com/in/siva-uruturi/" target="_blank" rel="noopener noreferrer">
+              <i class="bi bi-linkedin"></i>
+              LinkedIn
+            </a>
+            <a href="https://github.com/sivauruturi" target="_blank" rel="noopener noreferrer">
+              <i class="bi bi-github"></i>
+              GitHub
+            </a>
+            <a href="https://www.behance.net/shivauruturi" target="_blank" rel="noopener noreferrer">
+              <i class="bi bi-behance"></i>
+              Behance
+            </a>
+            <a href="https://dribbble.com/sivauruturi" target="_blank" rel="noopener noreferrer">
+              <i class="bi bi-dribbble"></i>
+              Dribbble
+            </a>
+          </div>
+
+          <p class="help">
+            <strong>Works on iPhone and Android</strong>
+            Tap <em>Add To Contacts</em> to open the contact card directly. Use <em>Download vCard</em>
+            to save the `.vcf` file. On iPhone, if the browser shows the contact preview instead of
+            downloading, use the share sheet to save or add it from there.
+          </p>
+
+          <a class="footer-link" href="index.html">
+            <i class="bi bi-arrow-left"></i>
+            Back to portfolio
+          </a>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+    (function () {
+      var vcardUrl = "assets/contact/siva-uruturi.vcf";
+      var fileName = "Siva-Uruturi.vcf";
+      var actionLinks = document.querySelectorAll("[data-vcard-action]");
+      var userAgent = navigator.userAgent || "";
+      var isIOS = /iPad|iPhone|iPod/.test(userAgent) || (userAgent.includes("Mac") && navigator.maxTouchPoints > 1);
+      var cachedVcardText = null;
+
+      async function getVcardText() {
+        if (cachedVcardText) {
+          return cachedVcardText;
+        }
+
+        var response = await fetch(vcardUrl, { cache: "no-store" });
+        if (!response.ok) {
+          throw new Error("Unable to fetch vCard");
+        }
+
+        cachedVcardText = await response.text();
+        return cachedVcardText;
+      }
+
+      async function createVcardFile() {
+        var text = await getVcardText();
+        return new File([text], fileName, { type: "text/vcard;charset=utf-8" });
+      }
+
+      async function openVcard() {
+        try {
+          var file = await createVcardFile();
+          var objectUrl = URL.createObjectURL(file);
+
+          window.location.assign(objectUrl);
+
+          window.setTimeout(function () {
+            URL.revokeObjectURL(objectUrl);
+          }, 4000);
+        } catch (error) {
+          window.location.href = vcardUrl;
+        }
+      }
+
+      async function shareOrDownloadVcard() {
+        try {
+          var file = await createVcardFile();
+
+          if (
+            isIOS &&
+            navigator.share &&
+            navigator.canShare &&
+            navigator.canShare({ files: [file] })
+          ) {
+            await navigator.share({
+              title: "Siva Uruturi Contact",
+              text: "Save Siva Uruturi's contact card.",
+              files: [file]
+            });
+            return;
+          }
+
+          var objectUrl = URL.createObjectURL(file);
+          var link = document.createElement("a");
+
+          link.href = objectUrl;
+          link.download = fileName;
+          document.body.appendChild(link);
+          link.click();
+          link.remove();
+
+          window.setTimeout(function () {
+            URL.revokeObjectURL(objectUrl);
+          }, 1000);
+        } catch (error) {
+          openVcard();
+        }
+      }
+
+      actionLinks.forEach(function (link) {
+        link.addEventListener("click", function (event) {
+          event.preventDefault();
+
+          if (link.dataset.vcardAction === "open") {
+            openVcard();
+            return;
+          }
+
+          shareOrDownloadVcard();
+        });
+      });
+    }());
+  </script>
+</body>
+</html>
