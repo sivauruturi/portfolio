@@ -2908,13 +2908,16 @@ body.portfolio-assistant-enabled .scrolltotop {
 }
 
 .portfolio-assistant__quick-replies {
-  display: flex;
-  flex-wrap: wrap;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 8px;
   padding: 0 18px 16px;
 }
 
 .portfolio-assistant__chip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   position: relative;
   overflow: hidden;
   border-radius: 999px;
@@ -2925,6 +2928,8 @@ body.portfolio-assistant-enabled .scrolltotop {
   color: rgba(255, 255, 255, 0.88);
   padding: 8px 12px;
   font: 500 0.83rem "Outfit", sans-serif;
+  text-align: center;
+  width: 100%;
   backdrop-filter: blur(10px);
   -webkit-backdrop-filter: blur(10px);
   transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
@@ -2940,6 +2945,12 @@ body.portfolio-assistant-enabled .scrolltotop {
 .portfolio-assistant__chip:hover::after,
 .portfolio-assistant__chip:focus-visible::after {
   opacity: 0.16;
+}
+
+@media (max-width: 575.98px) {
+  .portfolio-assistant__quick-replies {
+    grid-template-columns: 1fr;
+  }
 }
 
 .portfolio-assistant__form {
