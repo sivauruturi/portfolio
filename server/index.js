@@ -23,6 +23,8 @@ const port = Number(process.env.PORT || 3001);
 const config = getBookingConfig();
 const allowedOrigin = process.env.FRONTEND_ORIGIN || "";
 const siteRoot = path.join(__dirname, "..");
+const pythonExecutable =
+  process.env.PYTHON_EXECUTABLE || "python3";
 
 app.use(
   cors({
@@ -51,11 +53,11 @@ const bookingLimiter = rateLimit({
 
 app.use("/api/booking", bookingLimiter);
 
-function runRecruiterChatWorker(message) {
+function runRecruiterChatWorker(message, keywords) {
   const scriptPath = path.join(__dirname, "python", "resume_recruiter_chat.py");
 
   return new Promise(function(resolve, reject) {
-    const worker = spawn("python3", [scriptPath], {
+    const worker = spawn(pythonExecutable, [scriptPath], {
       stdio: ["pipe", "pipe", "pipe"]
     });
     let stdout = "";
@@ -75,7 +77,25 @@ function runRecruiterChatWorker(message) {
 
     worker.on("close", function(code) {
       if (code !== 0) {
-        reject(new Error(stderr.trim() || "Recruiter chat worker failed."));
+        var trimmedStderr = stderr.trim();
+        var trimmedStdout = stdout.trim();
+
+        if (trimmedStdout) {
+          try {
+            var errorPayload = JSON.parse(trimmedStdout);
+            reject(
+              new Error(
+                (errorPayload && errorPayload.error) ||
+                  trimmedStderr ||
+                  "Recruiter chat worker failed."
+              )
+            );
+            return;
+          } catch (parseError) {
+          }
+        }
+
+        reject(new Error(trimmedStderr || trimmedStdout || "Recruiter chat worker failed."));
         return;
       }
 
@@ -90,9 +110,7 @@ function runRecruiterChatWorker(message) {
       JSON.stringify({
         message,
         resumeUrl: getResumeUrl(),
-        model: process.env.OLLAMA_MODEL || "llama3.2",
-        baseUrl: process.env.OLLAMA_BASE_URL || "http://127.0.0.1:11434",
-        numCtx: Number(process.env.OLLAMA_NUM_CTX || 8192)
+        keywords: Array.isArray(keywords) ? keywords : []
       })
     );
     worker.stdin.end();
@@ -183,7 +201,11 @@ app.get("/api/resume-data", async function(req, res) {
 
 app.post("/api/recruiter-chat", async function(req, res) {
   try {
-    const payload = await runRecruiterChatWorker(String((req.body || {}).message || ""));
+    const requestBody = req.body || {};
+    const payload = await runRecruiterChatWorker(
+      String(requestBody.message || ""),
+      Array.isArray(requestBody.keywords) ? requestBody.keywords : []
+    );
 
     if (!payload || !payload.ok) {
       throw new Error((payload && payload.error) || "Unable to answer recruiter question.");

@@ -797,6 +797,30 @@ $("#contactform").on("submit", function(e) {
       .trim();
   }
 
+  function extractChatKeywords(userMessage) {
+    var normalized = normalizeUserMessage(userMessage);
+    var keywordMatchers = [
+      { keyword: "contact details", pattern: /contact details|contact info|how can i contact|reach you/ },
+      { keyword: "phone number", pattern: /phone number|mobile number|contact number/ },
+      { keyword: "phone", pattern: /\bphone\b|\bmobile\b/ },
+      { keyword: "email", pattern: /\bemail\b|\bmail\b/ },
+      { keyword: "address", pattern: /\baddress\b|\blocation\b|\bbased\b/ },
+      { keyword: "linkedin", pattern: /\blinkedin\b/ },
+      { keyword: "summary", pattern: /\bsummary\b|\bprofile\b|\babout\b|\bbackground\b/ },
+      { keyword: "experience", pattern: /\bexperience\b|\bwork history\b/ },
+      { keyword: "skills", pattern: /\bskills\b|\btools\b|\bstack\b/ },
+      { keyword: "education", pattern: /\beducation\b|\bdegree\b|\buniversity\b/ }
+    ];
+
+    return keywordMatchers.reduce(function(matches, matcher) {
+      if (matcher.pattern.test(normalized)) {
+        matches.push(matcher.keyword);
+      }
+
+      return matches;
+    }, []);
+  }
+
   function mergeResumeData(resumeData) {
     if (!resumeData) {
       return;
@@ -1391,11 +1415,14 @@ $("#contactform").on("submit", function(e) {
       return null;
     }
 
+    var keywords = extractChatKeywords(userMessage);
+
     var response = await fetch(portfolioAssistantConfig.apiEndpoint, {
       method: "POST",
       headers: portfolioAssistantConfig.requestHeaders,
       body: JSON.stringify({
-        message: userMessage
+        message: userMessage,
+        keywords: keywords
       })
     });
 
