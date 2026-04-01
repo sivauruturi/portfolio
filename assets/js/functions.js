@@ -2972,6 +2972,117 @@ $("#contactform").on("submit", function(e) {
     return "<p>" + escapeHtml(combinedAnswer) + "</p>";
   }
 
+  function buildProfileSummaryResponse(resumeData) {
+    var profile = resumeData.profile || {};
+    var lines = [];
+
+    if (profile.summary) {
+      lines.push("<p>" + escapeHtml(ensureSentence(profile.summary)) + "</p>");
+    }
+
+    if (profile.role || profile.location) {
+      lines.push(
+        "<p>" +
+        escapeHtml(
+          ensureSentence([profile.role, profile.location].filter(Boolean).join(" - "))
+        ) +
+        "</p>"
+      );
+    }
+
+    return lines.join("");
+  }
+
+  function buildContactResponse(resumeData) {
+    var contact = resumeData.contact || {};
+    var email = String(contact.email || assistantFallbackContact.email || "").trim();
+    var phonePrimary = String(contact.phonePrimary || assistantFallbackContact.phonePrimary || "").trim();
+    var phoneSecondary = String(contact.phoneSecondary || "").trim();
+    var lines = ["<p>You can reach Siva here:</p>"];
+
+    if (email) {
+      lines.push(
+        '<p>Email: <a href="mailto:' +
+        escapeHtml(email) +
+        '">' +
+        escapeHtml(email) +
+        "</a></p>"
+      );
+    }
+
+    if (phonePrimary) {
+      lines.push(
+        '<p>Phone: <a href="tel:' +
+        escapeHtml(phonePrimary.replace(/[^+\d]/g, "")) +
+        '">' +
+        escapeHtml(phonePrimary) +
+        "</a></p>"
+      );
+    }
+
+    if (phoneSecondary) {
+      lines.push(
+        '<p>Alternate Phone: <a href="tel:' +
+        escapeHtml(phoneSecondary.replace(/[^+\d]/g, "")) +
+        '">' +
+        escapeHtml(phoneSecondary) +
+        "</a></p>"
+      );
+    }
+
+    return lines.join("");
+  }
+
+  function buildExperienceResponse(resumeData) {
+    var experienceItems = toArray(resumeData.experience).slice(0, 3);
+
+    if (!experienceItems.length) {
+      return "";
+    }
+
+    return experienceItems.map(function(item) {
+      var lines = [];
+
+      if (item.role && item.company) {
+        lines.push(item.role + " at " + item.company);
+      } else if (item.role || item.company) {
+        lines.push(item.role || item.company);
+      }
+
+      if (item.period) {
+        lines.push(item.period);
+      }
+
+      if (item.location) {
+        lines.push("Location: " + item.location);
+      }
+
+      if (toArray(item.highlights).length > 0) {
+        lines.push(toArray(item.highlights)[0]);
+      }
+
+      return "<p>" + escapeHtml(ensureSentence(lines.join(". "))) + "</p>";
+    }).join("");
+  }
+
+  function getQuickReplyResponse(resumeData, userMessage) {
+    var normalizedQuestion = normalizeUserMessage(userMessage);
+
+    if (normalizedQuestion === "about me") {
+      return buildProfileSummaryResponse(resumeData);
+    }
+
+    if (normalizedQuestion === "contact") {
+      return buildContactResponse(resumeData);
+    }
+
+    if (normalizedQuestion === "my projects") {
+      return buildExperienceResponse(resumeData);
+    }
+
+    return "";
+  }
+
   function getFallbackContactResponse() {
     return (
       "<p>For more information, please connect with Siva directly.</p>" +
@@ -3004,6 +3115,12 @@ $("#contactform").on("submit", function(e) {
 
     if (!latestResumeData) {
       return getFallbackContactResponse();
+    }
+
+    var quickReplyResponse = getQuickReplyResponse(latestResumeData, userMessage);
+
+    if (quickReplyResponse) {
+      return quickReplyResponse;
     }
 
     if (isExperienceDurationQuestion(userMessage)) {
