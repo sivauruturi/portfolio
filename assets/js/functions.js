@@ -124,47 +124,46 @@ if (backgroundAudio && backgroundAudioToggle) {
   var backgroundAudioCanvas = backgroundAudioToggle.querySelector(".jkd-sound-canvas");
   var backgroundAudioCanvasContext = backgroundAudioCanvas ? backgroundAudioCanvas.getContext("2d") : null;
   var audioConsentKey = "portfolio-audio-consent";
+  var audioPlaybackStateKey = "portfolio-audio-playback-state";
   var storedAudioConsent = null;
+  var storedAudioPlaybackState = null;
   var soundToggleAnimationFrame = null;
   var backgroundAudioResumeQueued = false;
   var backgroundAudioResumeEvents = ["pointerdown", "keydown", "touchstart"];
   backgroundAudio.volume = 0.45;
   backgroundAudio.load();
 
-  var getAudioConsentCookie = function() {
+  var getStoredSessionValue = function(key) {
     try {
-      var cookiePattern = new RegExp("(?:^|; )" + audioConsentKey + "=([^;]*)");
-      var cookieMatch = document.cookie.match(cookiePattern);
-      return cookieMatch ? window.decodeURIComponent(cookieMatch[1]) : null;
+      return window.sessionStorage.getItem(key);
     } catch (error) {
       return null;
     }
   };
 
-  var setAudioConsentCookie = function(value) {
+  var setStoredSessionValue = function(key, value) {
     try {
-      document.cookie = audioConsentKey + "=" + window.encodeURIComponent(value) + "; path=/; SameSite=Lax";
+      window.sessionStorage.setItem(key, value);
     } catch (error) {
-      // Ignore cookie errors so audio controls still work.
+      // Ignore storage errors so audio controls still work.
     }
   };
 
   var getStoredAudioConsent = function() {
-    try {
-      return window.sessionStorage.getItem(audioConsentKey) || getAudioConsentCookie();
-    } catch (error) {
-      return getAudioConsentCookie();
-    }
+    return getStoredSessionValue(audioConsentKey);
   };
 
   var setStoredAudioConsent = function(value) {
-    setAudioConsentCookie(value);
+    setStoredSessionValue(audioConsentKey, value);
+  };
 
-    try {
-      window.sessionStorage.setItem(audioConsentKey, value);
-    } catch (error) {
-      // Ignore storage errors so audio controls still work.
-    }
+  var getStoredAudioPlaybackState = function() {
+    return getStoredSessionValue(audioPlaybackStateKey);
+  };
+
+  var setStoredAudioPlaybackState = function(value) {
+    storedAudioPlaybackState = value;
+    setStoredSessionValue(audioPlaybackStateKey, value);
   };
 
   var setBackgroundAudioState = function(label, iconClass) {
@@ -266,7 +265,7 @@ if (backgroundAudio && backgroundAudioToggle) {
   var resumeBackgroundAudioFromGesture = function() {
     removeQueuedBackgroundAudioResume();
 
-    if (storedAudioConsent === "granted" && backgroundAudio.paused) {
+    if (storedAudioConsent === "granted" && storedAudioPlaybackState !== "paused" && backgroundAudio.paused) {
       playBackgroundAudio(false, false);
     }
   };
@@ -322,10 +321,13 @@ if (backgroundAudio && backgroundAudioToggle) {
     if (backgroundAudio.paused) {
       storedAudioConsent = "granted";
       setStoredAudioConsent("granted");
+      setStoredAudioPlaybackState("playing");
       playBackgroundAudio();
       return;
     }
 
+    removeQueuedBackgroundAudioResume();
+    setStoredAudioPlaybackState("paused");
     backgroundAudio.pause();
     syncBackgroundAudioState();
   });
@@ -334,6 +336,7 @@ if (backgroundAudio && backgroundAudioToggle) {
     audioPermissionAllow.addEventListener("click", function() {
       storedAudioConsent = "granted";
       setStoredAudioConsent("granted");
+      setStoredAudioPlaybackState("playing");
       playBackgroundAudio();
     });
   }
@@ -342,6 +345,7 @@ if (backgroundAudio && backgroundAudioToggle) {
     audioPermissionDismiss.addEventListener("click", function() {
       storedAudioConsent = "denied";
       setStoredAudioConsent("denied");
+      setStoredAudioPlaybackState("paused");
       removeQueuedBackgroundAudioResume();
       backgroundAudio.pause();
       hideAudioPermissionPrompt();
@@ -349,14 +353,24 @@ if (backgroundAudio && backgroundAudioToggle) {
     });
   }
 
-  backgroundAudio.addEventListener("play", syncBackgroundAudioState);
-  backgroundAudio.addEventListener("pause", syncBackgroundAudioState);
+  backgroundAudio.addEventListener("play", function() {
+    setStoredAudioPlaybackState("playing");
+    syncBackgroundAudioState();
+  });
+
+  backgroundAudio.addEventListener("pause", function() {
+    setStoredAudioPlaybackState("paused");
+    syncBackgroundAudioState();
+  });
 
   storedAudioConsent = getStoredAudioConsent();
+  storedAudioPlaybackState = getStoredAudioPlaybackState();
 
   if (storedAudioConsent === "granted") {
     hideAudioPermissionPrompt();
-    playBackgroundAudio(false, true);
+    if (storedAudioPlaybackState !== "paused") {
+      playBackgroundAudio(false, true);
+    }
   } else if (storedAudioConsent !== "denied") {
     showAudioPermissionPrompt();
   } else {
